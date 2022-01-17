@@ -7,9 +7,14 @@ html {
 }
 
 body {
-  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  width: $page-width;
   text-align: center;
-  max-width: $page-width;
+  background-color: black;
 }
 
 h1 {
