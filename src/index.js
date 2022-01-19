@@ -36,7 +36,6 @@ const drawRectWithRadius = (x, y, width, height, r) => {
   ctx.arc(x + r, y + r, r, Math.PI, (Math.PI * 3) / 2)
   ctx.closePath()
 
-  // console.log('draw is working')
 }
 const drawHalfRectWithRadius = (x, y, width, height, r) => {
   ctx.beginPath()
@@ -56,7 +55,7 @@ const loadImage = (src) => new Promise((resolve, reject) => {
   image.addEventListener('load', reject, { once: true })
 });
 
-const fillText = (fz, font, color, baseline) => {
+const toFillText = (fz, font, color, baseline) => {
   ctx.font = `${fz} ${font}`;
   ctx.fillStyle = `${color}`;
   ctx.textBaseline = `${baseline}`;
@@ -75,7 +74,7 @@ const createField = () => {
 createField()
 
 let circleWidth = 32
-const marginText = 28
+let marginText = 28
 //----------------- Level -----------------
 
 const createLevelBtn = () => {
@@ -83,7 +82,6 @@ const createLevelBtn = () => {
   let text = `20`
 
   let textMetrics = ctx.measureText(text)
-  // console.log(textMetrics)
 
   let levelOffsetX = 99;
   let blockWidth = textMetrics.width + circleWidth + marginText * 2
@@ -130,7 +128,7 @@ const createMoneyBtn = () => {
 
   
   let textMetrics = ctx.measureText(text)
-  // console.log(textMetrics)
+  marginText = 23;
   blockWidth = textMetrics.width + circleWidth +  marginText * 2
   console.log(blockWidth)
   
@@ -176,6 +174,44 @@ async function createPauseBtn() {
   ctx.drawImage(pausePic, 776, 5, 67, 67);
 }
 createPauseBtn()
+
+//----------------- Turn and scores -----------------
+
+const turnsRender = () => {
+  drawRectWithRadius(536, 134, 262, 246, 20)
+  ctx.lineWidth = 7
+  ctx.strokeStyle = '#00d2ef'
+  ctx.fillStyle = '#00539e'
+  ctx.stroke()
+  ctx.fill()
+  ctx.closePath()
+}
+turnsRender();
+
+//----------------- Bonuses -----------------
+
+
+
+const createBonuses = () => {
+  toFillText(20, 'Marvin', 'white', top);
+  ctx.fillText('Бонусы', 618, 410)
+
+
+  async function createBonusCard(numberCard) {
+    const bonusCardPic = await loadImage('assets/images/roundedRectangle.png');
+      let offsetX = 512 - 60;
+      let margin = 0;
+      let widthCard = 84;
+      ctx.drawImage(bonusCardPic, offsetX + (widthCard * numberCard) + margin, 440, widthCard, 88);
+      margin += 16;
+  }
+  createBonusCard(1);
+  createBonusCard(2);
+  createBonusCard(3);
+}
+createBonuses();
+// 527x 501y
+
 // // Test import of a JavaScript module
 // import { example } from '@/js/example'
 
