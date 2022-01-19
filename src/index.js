@@ -106,6 +106,8 @@ const createProgress = () => {
 }
 createProgress()
 
+let blockWidth;
+let moneyOffsetX;
 //----------------- Money -----------------
 
 const createMoneyBtn = () => {
@@ -115,11 +117,13 @@ const createMoneyBtn = () => {
 
   let text = ` `
 
+  moneyOffsetX = 583;
+
   let textMetrics = ctx.measureText(text)
   // console.log(textMetrics)
-  let blockWidth = textMetrics.width + circleWidth + 25
+  blockWidth = textMetrics.width + circleWidth + 25
 
-  drawRectWithRadius(583, 16, blockWidth, 38, 20)
+  drawRectWithRadius(moneyOffsetX, 16, blockWidth, 38, 20)
   ctx.fillStyle = '#003683'
   ctx.fill()
   ctx.closePath()
@@ -149,11 +153,10 @@ const loadImage = (src) => new Promise((resolve, reject) => {
 
 
 async function main() {
-    const plusPic = await loadImage('assets/cimages/green.png');
+    const plusPic = await loadImage('assets/images/plus.png');
   
-    ctx.drawImage(plusPic, 699, 33, 30, 30);
+    ctx.drawImage(plusPic, moneyOffsetX + blockWidth + 18, 21, 30, 30);
 }
-
 main()
 
 // //----------------- Pause -----------------
