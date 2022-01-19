@@ -4,7 +4,7 @@ import '@/styles/index.scss'
 const canvas = document.getElementById('screen')
 // console.log(canvas)
 const ctx = canvas.getContext('2d')
-canvas.width = 1086
+canvas.width = 856
 canvas.height = 605
 // console.log(ctx)
 // createCanv();
@@ -39,15 +39,28 @@ const drawRectWithRadius = (x, y, width, height, r) => {
   // console.log('draw is working')
 }
 const drawHalfRectWithRadius = (x, y, width, height, r) => {
-    ctx.beginPath()
-    ctx.moveTo(x, y)
-    ctx.lineTo(x + width, y)
-    ctx.arc(x + width - r, y + height - r, r, 0, Math.PI / 2)
-    ctx.lineTo(x + r, y + height)
-    ctx.arc(x + r, y + height - r, r, Math.PI / 2, Math.PI)
-    ctx.lineTo(x, y)
-    ctx.closePath()
-  }
+  ctx.beginPath()
+  ctx.moveTo(x, y)
+  ctx.lineTo(x + width, y)
+  ctx.arc(x + width - r, y + height - r, r, 0, Math.PI / 2)
+  ctx.lineTo(x + r, y + height)
+  ctx.arc(x + r, y + height - r, r, Math.PI / 2, Math.PI)
+  ctx.lineTo(x, y)
+  ctx.closePath()
+}
+
+const loadImage = (src) => new Promise((resolve, reject) => {
+  const image = new Image();
+  image.src = src;
+  image.addEventListener('load', () => resolve(image), { once: true });
+  image.addEventListener('load', reject, { once: true })
+});
+
+const fillText = (fz, font, color, baseline) => {
+  ctx.font = `${fz} ${font}`;
+  ctx.fillStyle = `${color}`;
+  ctx.textBaseline = `${baseline}`;
+}
 
 //----------------- Field -----------------
 
@@ -62,27 +75,26 @@ const createField = () => {
 createField()
 
 let circleWidth = 32
-
+const marginText = 28
 //----------------- Level -----------------
 
 const createLevelBtn = () => {
-  ctx.font = '20px robota'
-  ctx.strokeStyle = 'white'
-  ctx.textBaseline = 'top'
-
-  let text = ` `
+  ctx.font = '20px Marvin'
+  let text = `0`
 
   let textMetrics = ctx.measureText(text)
   // console.log(textMetrics)
 
-  let blockWidth = textMetrics.width + circleWidth + 25
+  let blockWidth = textMetrics.width + circleWidth + marginText * 2
 
   drawRectWithRadius(99, 14, blockWidth, 38, 20)
   ctx.fillStyle = '#003683'
   ctx.fill()
   ctx.closePath()
 
-  ctx.strokeText(text, 150, 25)
+  ctx.fillStyle = 'white'
+  ctx.textBaseline = 'top'
+  ctx.fillText(text, 99 + blockWidth / 1.75, 22)
 
   ctx.beginPath()
   ctx.arc(119, 32, 20, 0, 2 * Math.PI, false)
@@ -106,29 +118,28 @@ const createProgress = () => {
 }
 createProgress()
 
+//----------------- Money -----------------
 let blockWidth;
 let moneyOffsetX;
-//----------------- Money -----------------
 
 const createMoneyBtn = () => {
-  ctx.font = '20px robota'
-  ctx.strokeStyle = 'white'
-  ctx.textBaseline = 'top'
-
-  let text = ` `
+  ctx.font = '20px Marvin'
+  let text = `2`
 
   moneyOffsetX = 583;
 
   let textMetrics = ctx.measureText(text)
   // console.log(textMetrics)
-  blockWidth = textMetrics.width + circleWidth + 25
+  blockWidth = textMetrics.width + circleWidth +  marginText * 2
 
   drawRectWithRadius(moneyOffsetX, 16, blockWidth, 38, 20)
   ctx.fillStyle = '#003683'
   ctx.fill()
   ctx.closePath()
 
-  ctx.strokeText(text, 620, 25)
+  ctx.fillStyle = 'white'
+  ctx.textBaseline = 'top'
+  ctx.fillText(text, moneyOffsetX + blockWidth / 1.75, 22)
 
   ctx.beginPath()
   ctx.arc(600, 34, 20, 0, 2 * Math.PI, false)
@@ -143,42 +154,21 @@ createMoneyBtn()
 
 //----------------- Plus money button -----------------
 
-const loadImage = (src) => new Promise((resolve, reject) => {
-    const image = new Image();
-    image.src = src;
-    image.addEventListener('load', () => resolve(image), { once: true });
-    image.addEventListener('load', reject, { once: true });
-
-});
-
-
-async function main() {
+async function createPlusBtn() {
     const plusPic = await loadImage('assets/images/plus.png');
   
     ctx.drawImage(plusPic, moneyOffsetX + blockWidth + 18, 21, 30, 30);
 }
-main()
+createPlusBtn()
 
-// //----------------- Pause -----------------
+//----------------- Pause button -----------------
 
-// const createPauseBtn = () => {
-//     drawRectWithRadius(583, 16, 90, 38, 20)
-//     ctx.fillStyle = '#003683'
-//     ctx.fill()
-//     ctx.closePath()
+async function createPauseBtn() {
+  const pausePic = await loadImage('assets/images/pause.png');
 
-//     ctx.beginPath();
-//     ctx.arc(600, 34, 20, 0, 2*Math.PI, false);
-//     ctx.fillStyle = '#b5b5b5'
-//     ctx.fill();
-//     ctx.closePath();
-
-//     ctx.font = "20px robota";
-//     ctx.strokeStyle = "white";
-//     ctx.textBaseline = 'top';
-//     ctx.strokeText(`6478`, 620, 25);
-// }
-// createPauseBtn();
+  ctx.drawImage(pausePic, 776, 5, 67, 67);
+}
+createPauseBtn()
 // // Test import of a JavaScript module
 // import { example } from '@/js/example'
 
