@@ -80,21 +80,23 @@ const marginText = 28
 
 const createLevelBtn = () => {
   ctx.font = '20px Marvin'
-  let text = `0`
+  let text = `20`
 
   let textMetrics = ctx.measureText(text)
   // console.log(textMetrics)
 
+  let levelOffsetX = 99;
   let blockWidth = textMetrics.width + circleWidth + marginText * 2
+  let centerText = levelOffsetX + ((blockWidth - textMetrics.width) / 2) + (circleWidth / 2)
 
-  drawRectWithRadius(99, 14, blockWidth, 38, 20)
+  drawRectWithRadius(levelOffsetX, 14, blockWidth, 38, 20)
   ctx.fillStyle = '#003683'
   ctx.fill()
   ctx.closePath()
 
   ctx.fillStyle = 'white'
   ctx.textBaseline = 'top'
-  ctx.fillText(text, 99 + blockWidth / 1.75, 22)
+  ctx.fillText(text, centerText, 22)
 
   ctx.beginPath()
   ctx.arc(119, 32, 20, 0, 2 * Math.PI, false)
@@ -124,13 +126,18 @@ let moneyOffsetX;
 
 const createMoneyBtn = () => {
   ctx.font = '20px Marvin'
-  let text = `2`
+  let text = `20000`
 
-  moneyOffsetX = 583;
-
+  
   let textMetrics = ctx.measureText(text)
   // console.log(textMetrics)
   blockWidth = textMetrics.width + circleWidth +  marginText * 2
+  console.log(blockWidth)
+  
+  moneyOffsetX = 583;
+  
+
+  let centerText = moneyOffsetX + ((blockWidth - textMetrics.width) / 2) + (circleWidth / 2)
 
   drawRectWithRadius(moneyOffsetX, 16, blockWidth, 38, 20)
   ctx.fillStyle = '#003683'
@@ -139,7 +146,7 @@ const createMoneyBtn = () => {
 
   ctx.fillStyle = 'white'
   ctx.textBaseline = 'top'
-  ctx.fillText(text, moneyOffsetX + blockWidth / 1.75, 22)
+  ctx.fillText(text, centerText, 22)
 
   ctx.beginPath()
   ctx.arc(600, 34, 20, 0, 2 * Math.PI, false)
@@ -157,7 +164,7 @@ createMoneyBtn()
 async function createPlusBtn() {
     const plusPic = await loadImage('assets/images/plus.png');
   
-    ctx.drawImage(plusPic, moneyOffsetX + blockWidth + 18, 21, 30, 30);
+    ctx.drawImage(plusPic, moneyOffsetX + blockWidth + 5, 21, 30, 30);
 }
 createPlusBtn()
 
