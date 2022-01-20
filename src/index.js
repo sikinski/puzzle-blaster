@@ -78,6 +78,13 @@ let marginText = 28
 //----------------- Level -----------------
 
 const createLevelBtn = () => {
+  // async function createLevelBlock() {
+  //   const levelPic = await loadImage('assets/images/button.png');
+  
+  //   ctx.drawImage(levelPic, levelOffsetX, 14, blockWidth, 38);
+  // }
+  // createLevelBlock()
+
   ctx.font = '20px Marvin'
   let text = `20`
 
@@ -92,6 +99,12 @@ const createLevelBtn = () => {
   ctx.fill()
   ctx.closePath()
 
+  // let swedishflagbg = new Image();
+  // swedishflagbg.src = "assets/images/button1.png";
+  // swedishflagbg.onload = function() {
+  // ctx.drawImage(swedishflagbg, levelOffsetX, 14, blockWidth, 38);
+  // }
+
   ctx.fillStyle = 'white'
   ctx.textBaseline = 'top'
   ctx.fillText(text, centerText, 22)
@@ -105,14 +118,24 @@ const createLevelBtn = () => {
 createLevelBtn()
 
 //----------------- Progress -----------------
+const maxWidthProgress = 307
+let actualWidthProgress  = 30;
 const createProgress = () => {
   drawHalfRectWithRadius(227, 0, 327, 62, 20)
-  ctx.fillStyle = 'white'
+  ctx.fillStyle = '#0c2e5c'
   ctx.fill()
   ctx.closePath()
 
-  drawRectWithRadius(235, 27, 307, 24, 15)
-  ctx.fillStyle = '#003683'
+  toFillText('17px', 'Marvin', 'white', top);
+  ctx.fillText('Прогресс', 350, 5)
+
+  drawRectWithRadius(235, 27, maxWidthProgress, 24, 15)
+  ctx.fillStyle = '#011a3b'
+  ctx.fill()
+  ctx.closePath()
+
+  drawRectWithRadius(235, 27, actualWidthProgress, 24, 15)
+  ctx.fillStyle = '#7ae400'
   ctx.fill()
   ctx.closePath()
 }
@@ -176,15 +199,24 @@ async function createPauseBtn() {
 createPauseBtn()
 
 //----------------- Turn and scores -----------------
+let offsetXTurns = 536;
+let offsetYTurns = 134;
 
 const turnsRender = () => {
-  drawRectWithRadius(536, 134, 262, 246, 20)
+  drawRectWithRadius(offsetXTurns, offsetYTurns, 262, 246, 20)
   ctx.lineWidth = 7
   ctx.strokeStyle = '#00d2ef'
   ctx.fillStyle = '#00539e'
   ctx.stroke()
   ctx.fill()
   ctx.closePath()
+
+  async function createPlusBtn() {
+    const plusPic = await loadImage('assets/images/moves.png');
+  
+    ctx.drawImage(plusPic, offsetXTurns + (262 / 6), offsetYTurns, 176, 176);
+}
+createPlusBtn()
 }
 turnsRender();
 
