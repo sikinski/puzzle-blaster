@@ -73,49 +73,34 @@ const createField = () => {
 }
 createField()
 
-let circleWidth = 32
-let marginText = 28
+let marginText = 25
+const circleWidth = 32
+
 //----------------- Level -----------------
 
-const createLevelBtn = () => {
-  // async function createLevelBlock() {
-  //   const levelPic = await loadImage('assets/images/button.png');
+async function createLevelBlock() {
+  const levelPic = await loadImage('assets/images/button1.png');
+
+  const levelOffsetX = 99;
+  let level = `20`
+  let blockWidth = ctx.measureText(level).width + circleWidth + marginText * 2
+  let centerTextX = levelOffsetX + ((blockWidth - ctx.measureText(level).width) / 2) + (circleWidth / 2)
   
-  //   ctx.drawImage(levelPic, levelOffsetX, 14, blockWidth, 38);
-  // }
-  // createLevelBlock()
+  // block image
+  ctx.drawImage(levelPic, levelOffsetX, 14, blockWidth, 38);
 
-  ctx.font = '20px Marvin'
-  let text = `20`
+  // text
+  toFillText("20px", 'Marvin', 'white', 'top');
+  ctx.fillText(level, centerTextX, 22)
 
-  let textMetrics = ctx.measureText(text)
-
-  let levelOffsetX = 99;
-  let blockWidth = textMetrics.width + circleWidth + marginText * 2
-  let centerText = levelOffsetX + ((blockWidth - textMetrics.width) / 2) + (circleWidth / 2)
-
-  drawRectWithRadius(levelOffsetX, 14, blockWidth, 38, 20)
-  ctx.fillStyle = '#003683'
-  ctx.fill()
-  ctx.closePath()
-
-  // let swedishflagbg = new Image();
-  // swedishflagbg.src = "assets/images/button1.png";
-  // swedishflagbg.onload = function() {
-  // ctx.drawImage(swedishflagbg, levelOffsetX, 14, blockWidth, 38);
-  // }
-
-  ctx.fillStyle = 'white'
-  ctx.textBaseline = 'top'
-  ctx.fillText(text, centerText, 22)
-
+  // circle
   ctx.beginPath()
   ctx.arc(119, 32, 20, 0, 2 * Math.PI, false)
   ctx.fillStyle = '#b5b5b5'
   ctx.fill()
   ctx.closePath()
 }
-createLevelBtn()
+createLevelBlock()
 
 //----------------- Progress -----------------
 const maxWidthProgress = 307
@@ -126,7 +111,7 @@ const createProgress = () => {
   ctx.fill()
   ctx.closePath()
 
-  toFillText('17px', 'Marvin', 'white', top);
+  toFillText('17px', 'Marvin', 'white', 'top');
   ctx.fillText('Прогресс', 350, 5)
 
   drawRectWithRadius(235, 27, maxWidthProgress, 24, 15)
@@ -143,51 +128,42 @@ createProgress()
 
 //----------------- Money -----------------
 let blockWidth;
-let moneyOffsetX;
 
-const createMoneyBtn = () => {
-  ctx.font = '20px Marvin'
-  let text = `20000`
+let moneyOffsetX = 583
 
+async function createMoneyBlock() {
+  const moneyPic = await loadImage('assets/images/button2.png');
+
+  let money = `20000`
+  let blockWidth = ctx.measureText(money).width + circleWidth +  marginText * 2
+  let centerTextX = moneyOffsetX + ((blockWidth - ctx.measureText(money).width) / 2) + (circleWidth / 2)
   
-  let textMetrics = ctx.measureText(text)
-  marginText = 23;
-  blockWidth = textMetrics.width + circleWidth +  marginText * 2
-  console.log(blockWidth)
+  // block image
+  ctx.drawImage(moneyPic, moneyOffsetX, 16, blockWidth, 38);
   
-  moneyOffsetX = 583;
-  
+  // text
+  toFillText("20px", 'Marvin', 'white', 'top');
+  ctx.fillText(money, centerTextX, 22)
 
-  let centerText = moneyOffsetX + ((blockWidth - textMetrics.width) / 2) + (circleWidth / 2)
-
-  drawRectWithRadius(moneyOffsetX, 16, blockWidth, 38, 20)
-  ctx.fillStyle = '#003683'
-  ctx.fill()
-  ctx.closePath()
-
-  ctx.fillStyle = 'white'
-  ctx.textBaseline = 'top'
-  ctx.fillText(text, centerText, 22)
-
+  // circle 
   ctx.beginPath()
   ctx.arc(600, 34, 20, 0, 2 * Math.PI, false)
   ctx.fillStyle = '#b5b5b5'
   ctx.fill()
   ctx.closePath()
 
-  let plusMoney = new Image()
-  plusMoney.src = './images/plus.png'
-}
-createMoneyBtn()
-
-//----------------- Plus money button -----------------
-
-async function createPlusBtn() {
+  async function createPlusBtn() {
     const plusPic = await loadImage('assets/images/plus.png');
   
     ctx.drawImage(plusPic, moneyOffsetX + blockWidth + 5, 21, 30, 30);
 }
 createPlusBtn()
+}
+createMoneyBlock();
+
+//----------------- Plus money button -----------------
+
+
 
 //----------------- Pause button -----------------
 
