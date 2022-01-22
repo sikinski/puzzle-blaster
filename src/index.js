@@ -213,24 +213,41 @@ const turnsRender = () => {
   ctx.closePath()
 
   //569  285y
-  let offsetXCircle = offsetXTurns + (156 / 2.8)
+  let offsetXCircle = offsetXTurns + (156 / 2.8) // 2.8 because shadow
 
   async function createScores () {
     const movesPic = await loadImage('assets/images/moves.png');
   
     ctx.drawImage(movesPic, offsetXCircle, offsetYTurns, 156, 156);
 
-    toFillText("42px", 'Marvin', 'white', 'right');
-    ctx.fillText('37', offsetXCircle + (156 / 2.8), (offsetYTurns + (156 / 2) - 20))
+    // Text
+    let moves = `37`
+    const textMetrics = ctx.measureText(moves)
+    const centerMovesX = (offsetXCircle + 156 /2) - textMetrics.width
+    const centerMovesY = (offsetYTurns + 156 / 2.8) 
+
+    toFillText("44px", 'Marvin', 'white', 'right');
+    ctx.fillText(moves, centerMovesX, centerMovesY)
   }
   createScores()
-
-  
 
   const widthScoresBlock = 212
   drawRectWithRadius(offsetXTurns + 26, 285, widthScoresBlock, 86, 20)
   ctx.fillStyle = '#011a3b'
   ctx.fill()
+
+  const innerText = `Очки: `
+  const centerInnerX = ((offsetXTurns + 26) + widthScoresBlock / 2) - (ctx.measureText(innerText).width / 2.8)
+
+  toFillText("20px", 'Marvin', 'white', 'top');
+  ctx.fillText(innerText, centerInnerX, 298)
+
+  let points = `221`
+  const centerPointsX = ((offsetXTurns + 26) + widthScoresBlock / 2) - (ctx.measureText(points).width / 2)
+
+  toFillText("28px", 'Marvin', 'white', 'top');
+  ctx.fillText(points, centerPointsX, 328)
+
 }
 turnsRender();
 
@@ -261,7 +278,7 @@ const createBonuses = () => {
     // Money symbol creating
     let circleX = ((offsetXCard + 16) + (widthInner / 2) + 15)
     ctx.beginPath()
-    ctx.arc(circleX, offsetYInner + 12, 10, 20, 2 * Math.PI, false)
+    ctx.arc(circleX, offsetYInner + 13, 9, 0, 2 * Math.PI)
     ctx.fillStyle = '#b4b4b4'
     ctx.fill()
     ctx.closePath()
