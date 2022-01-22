@@ -199,11 +199,12 @@ async function createPauseBtn() {
 createPauseBtn()
 
 //----------------- Turn and scores -----------------
-let offsetXTurns = 536;
-let offsetYTurns = 134;
+const offsetXTurns = 536;
+const offsetYTurns = 134;
+const widthBlock = 262;
 
 const turnsRender = () => {
-  drawRectWithRadius(offsetXTurns, offsetYTurns, 262, 246, 20)
+  drawRectWithRadius(offsetXTurns, offsetYTurns, widthBlock, 246, 20)
   ctx.lineWidth = 7
   ctx.strokeStyle = '#00d2ef'
   ctx.fillStyle = '#00539e'
@@ -211,38 +212,76 @@ const turnsRender = () => {
   ctx.fill()
   ctx.closePath()
 
-  async function createPlusBtn() {
-    const plusPic = await loadImage('assets/images/moves.png');
+  //569  285y
+  let offsetXCircle = offsetXTurns + (156 / 2.8)
+
+  async function createScores () {
+    const movesPic = await loadImage('assets/images/moves.png');
   
-    ctx.drawImage(plusPic, offsetXTurns + (262 / 6), offsetYTurns, 176, 176);
-}
-createPlusBtn()
+    ctx.drawImage(movesPic, offsetXCircle, offsetYTurns, 156, 156);
+
+    toFillText("42px", 'Marvin', 'white', 'right');
+    ctx.fillText('37', offsetXCircle + (156 / 2.8), (offsetYTurns + (156 / 2) - 20))
+  }
+  createScores()
+
+  
+
+  const widthScoresBlock = 212
+  drawRectWithRadius(offsetXTurns + 26, 285, widthScoresBlock, 86, 20)
+  ctx.fillStyle = '#011a3b'
+  ctx.fill()
 }
 turnsRender();
 
 //----------------- Bonuses -----------------
 
-
-
 const createBonuses = () => {
-  toFillText(20, 'Marvin', 'white', top);
+  toFillText("20px", 'Marvin', 'white', top);
   ctx.fillText('Бонусы', 618, 410)
 
 
-  async function createBonusCard(numberCard) {
+  async function createBonusCard(numberCard, numMoney) {
+    // Drawing an outer block
     const bonusCardPic = await loadImage('assets/images/roundedRectangle.png');
-      let offsetX = 512 - 60;
-      let margin = 0;
-      let widthCard = 84;
-      ctx.drawImage(bonusCardPic, offsetX + (widthCard * numberCard) + margin, 440, widthCard, 88);
-      margin += 16;
+    const offsetX = 412;
+    const widthCard = 100;
+    const heightCard = 104;
+    const offsetXCard = offsetX + (widthCard * numberCard)
+    ctx.drawImage(bonusCardPic, offsetXCard, 444, widthCard, heightCard);
+
+    // Drawing an inner block
+    const heightInner = 26
+    const widthInner = 69
+    const offsetYInner = ((offsetX + heightCard) - heightInner) + 13
+    drawRectWithRadius(offsetXCard + 16, offsetYInner, widthInner, heightInner, 15)
+    ctx.fillStyle = '#3d0355'
+    ctx.fill()
+
+    // Money symbol creating
+    let circleX = ((offsetXCard + 16) + (widthInner / 2) + 15)
+    ctx.beginPath()
+    ctx.arc(circleX, offsetYInner + 12, 10, 20, 2 * Math.PI, false)
+    ctx.fillStyle = '#b4b4b4'
+    ctx.fill()
+    ctx.closePath()
+
+    // Text creating
+    ctx.font = '20px Marvin'
+    let bonusMoney = `${numMoney}`
+    let textMetrics = ctx.measureText(bonusMoney)
+    
+    let centerTextX = (offsetXCard + 16) + ((widthInner - textMetrics.width) / 2)
+
+    toFillText("18px", 'Marvin', 'white', top);
+    ctx.fillText(bonusMoney, centerTextX - 8, offsetYInner + 3)      
+
   }
-  createBonusCard(1);
-  createBonusCard(2);
-  createBonusCard(3);
+  createBonusCard(1, '5');
+  createBonusCard(2, '3');
+  createBonusCard(3, '10');
 }
 createBonuses();
-// 527x 501y
 
 // // Test import of a JavaScript module
 // import { example } from '@/js/example'
