@@ -10,17 +10,66 @@ export class Game {
   }
 
   init() {
-    this.level = '1'
+    this.level = 1
     this.progress = 0
-    this.money = '300'
-    this.moves = '30'
-    this.scores = '0'
+    this.money = 300
+    this.moves = 30
+    this.scores = 0
+
+    this.cubes = [
+      { name: 'red', path: './images/red.png' },
+      { name: 'green', path: './images/green.png' },
+      { name: 'blue', path: './images/blue.png' },
+      { name: 'purple', path: './images/purple.png' },
+      { name: 'yellow', path: './images/yellow.png' },
+    ]
+
+    this.colors = {
+      red: 'red',
+      green: 'green',
+      yellow: 'yellow',
+      blue: 'blue',
+      purple: 'purple',
+    }
+    const red = this.colors.red
+    const green = this.colors.green
+    const yellow = this.colors.yellow
+    const blue = this.colors.blue
+    const purple = this.colors.purple
+
+    this.map = [
+      [red, green, green, green, yellow, yellow, red, red, red],
+      [red, yellow, green, green, purple, yellow, blue, blue, red],
+      [blue, blue, green, green, yellow, yellow, red, red, red],
+      [blue, blue, blue, blue, yellow, yellow, red, red, red],
+      [blue, blue, green, green, purple, yellow, red, red, red],
+      [red, green, green, green, purple, yellow, red, red, red],
+      [red, purple, purple, purple, purple, purple, purple, purple, purple],
+      [red, green, yellow, green, purple, yellow, red, red, red],
+      [red, green, yellow, green, purple, yellow, red, red, red],
+    ]
   }
 
   //___Methods___
 
+  async drawingCubes() {
+    const widthCube = 42
+    const heightCube = 52
+    let offsetXField = 44
+    let offsetYField = 490
+    for (let i = this.map.length - 1; i >= 0; i--) {
+      for (let j = 0; j < this.map[i].length; j++) {
+        let cube = await loadImage(`./assets/images/${this.map[i][j]}.png`)
+        this.ctx.drawImage(cube, offsetXField, offsetYField, widthCube, heightCube)
+        offsetXField += widthCube
+      }
+      offsetXField = 44
+      offsetYField -= heightCube - 6
+    }
+  }
+
   drawField() {
-    drawRectWithRadius(this.ctx, 32, 107, 395, 430, 20)
+    drawRectWithRadius(this.ctx, 32, 107, 400, 445, 20)
     this.ctx.lineWidth = 7
     this.ctx.strokeStyle = '#252e6d'
     this.ctx.fillStyle = '#020526'
@@ -30,22 +79,22 @@ export class Game {
 
   async drawLevelBlock() {
     const levelPic = await loadImage('./assets/images/level-block.png')
-  
+
     const marginText = 25
     const circleWidth = 32
     const levelOffsetX = 99
+    const widthText = this.ctx.measureText(this.level)
 
-    const widthLevelBlock = this.ctx.measureText(this.level).width + circleWidth + marginText * 2
+    const widthLevelBlock = widthText.width + circleWidth + marginText * 2
+    const centerTextX = levelOffsetX + (widthLevelBlock - widthText.width) / 2 + circleWidth / 2
 
-    const centerTextX = levelOffsetX + (widthLevelBlock - this.ctx.measureText(this.level).width) / 2 + circleWidth / 2
-  
     // block image
     this.ctx.drawImage(levelPic, levelOffsetX, 14, widthLevelBlock, 38)
-  
+
     // text
-    defineText(this.ctx,'20px', 'Marvin', 'white', 'top')
+    defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
     this.ctx.fillText(this.level, centerTextX, 22)
-  
+
     // circle
     this.ctx.beginPath()
     this.ctx.arc(119, 32, 20, 0, 2 * Math.PI, false)
@@ -65,7 +114,7 @@ export class Game {
     this.ctx.closePath()
 
     // text
-    defineText(this.ctx,'17px', 'Marvin', 'white', 'top')
+    defineText(this.ctx, '17px', 'Marvin', 'white', 'top')
     this.ctx.fillText(progressHeading, 350, 5)
 
     // bg progress line
@@ -76,12 +125,10 @@ export class Game {
 
     // actual progress line
     drawRectWithRadius(this.ctx, 235, 27, this.progress, 24, 15)
-    if (this.progress < 30) {
-      this.ctx.fillStyle = '#0c2e5c'
-    } else {
+    if (this.progress > 30) {
       this.ctx.fillStyle = '#7ae400'
+      this.ctx.fill()
     }
-    this.ctx.fill()
     this.ctx.closePath()
   }
 
@@ -91,25 +138,25 @@ export class Game {
     const marginText = 25
     const circleWidth = 32
     const moneyOffsetX = 583
+    const widthText = this.ctx.measureText(this.money).width // some trubls width json.str: idk why it works without this method but it does
+    const widthMoneyBlock = widthText + circleWidth + marginText * 2
 
-    const widthMoneyBlock = this.ctx.measureText(this.money).width + circleWidth + marginText * 2
+    const centerTextX = moneyOffsetX + (widthMoneyBlock - widthText) / 2 + circleWidth / 2
 
-    const centerTextX = moneyOffsetX + (widthMoneyBlock - this.ctx.measureText(this.money).width) / 2 + circleWidth / 2
-  
     // block image
     this.ctx.drawImage(moneyPic, moneyOffsetX, 16, widthMoneyBlock, 38)
-  
+
     // text
-    defineText(this.ctx,'20px', 'Marvin', 'white', 'top')
+    defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
     this.ctx.fillText(this.money, centerTextX, 22)
-  
+
     // circle
     this.ctx.beginPath()
     this.ctx.arc(600, 34, 20, 0, 2 * Math.PI, false)
     this.ctx.fillStyle = '#b5b5b5'
     this.ctx.fill()
     this.ctx.closePath()
-  
+
     // plus money btn
     const plusPic = await loadImage('assets/images/plus.png')
 
@@ -118,9 +165,9 @@ export class Game {
 
   async drawPauseBtn() {
     const pausePic = await loadImage('assets/images/pause.png')
-  
+
     this.ctx.drawImage(pausePic, 776, 5, 67, 67)
-  } 
+  }
 
   async drawMovesAndScores() {
     const offsetXTurns = 536
@@ -145,9 +192,8 @@ export class Game {
     const centerMovesX = offsetXCircleMoves + 156 / 2 - this.ctx.measureText(this.moves).width
     const centerMovesY = offsetYTurns + 156 / 2.8
 
-    defineText(this.ctx,'44px', 'Marvin', 'white', 'right')
+    defineText(this.ctx, '44px', 'Marvin', 'white', 'right')
     this.ctx.fillText(this.moves, centerMovesX, centerMovesY)
-
 
     // scores block
     const widthScoresBlock = 212
@@ -156,7 +202,8 @@ export class Game {
     this.ctx.fill()
 
     const innerText = `Очки:`
-    const centerInnerX = offsetXTurns + 26 + widthScoresBlock / 2 - this.ctx.measureText(innerText).width / 4
+    const centerInnerX =
+      offsetXTurns + 26 + widthScoresBlock / 2 - this.ctx.measureText(innerText).width / 4
 
     defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
     this.ctx.fillText(innerText, centerInnerX, 298)
@@ -164,13 +211,13 @@ export class Game {
     const centerScoresX =
       offsetXTurns + 26 + widthScoresBlock / 2 - this.ctx.measureText(this.scores).width / 2
 
-    defineText(this.ctx,'28px', 'Marvin', 'white', 'top')
-    this.ctx.fillText(this.scores, centerScoresX, 328) 
+    defineText(this.ctx, '28px', 'Marvin', 'white', 'top')
+    this.ctx.fillText(this.scores, centerScoresX, 328)
   }
 
-  async drawBonuses (numberCard, numMoney) {
+  async drawBonuses(numberCard, numMoney) {
     const bonusHeading = 'Бонусы'
-    defineText(this.ctx,'20px', 'Marvin', 'white', 'top')
+    defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
     this.ctx.fillText(bonusHeading, 618, 410)
 
     // Drawing an outer block
@@ -186,7 +233,7 @@ export class Game {
     const heightInner = 26
     const widthInner = 69
     const offsetYInner = offsetX + heightCard - heightInner + 13
-    
+
     drawRectWithRadius(this.ctx, offsetXCard + 16, offsetYInner, widthInner, heightInner, 15)
     this.ctx.fillStyle = '#3d0355'
     this.ctx.fill()
@@ -205,11 +252,12 @@ export class Game {
 
     const centerTextX = offsetXCard + 16 + (widthInner - this.ctx.measureText(numMoney).width) / 2
 
-    defineText(this.ctx,'18px', 'Marvin', 'white', 'top')
+    defineText(this.ctx, '18px', 'Marvin', 'white', 'top')
     this.ctx.fillText(numMoney, centerTextX - 8, offsetYInner + 3)
   }
   async initRender() {
-      this.drawField()
+    this.drawField()
+    await this.drawingCubes()
     await this.drawLevelBlock()
     this.drawProgress()
     await this.drawMoneyBlock()
