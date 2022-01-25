@@ -1,4 +1,5 @@
 import { drawRectWithRadius, drawHalfRectWithRadius, loadImage, defineText } from './utils.js'
+// import { createMouse } from './mouseListener.js'
 
 export class Game {
   constructor(canvas) {
@@ -36,6 +37,10 @@ export class Game {
     const yellow = this.colors.yellow
     const blue = this.colors.blue
     const purple = this.colors.purple
+    
+    // let clickX;
+    // let clickY;
+
 
     this.map = [
       [red, green, green, green, yellow, yellow, red, red, red],
@@ -48,6 +53,10 @@ export class Game {
       [red, green, yellow, green, purple, yellow, red, red, red],
       [red, green, yellow, green, purple, yellow, red, red, red],
     ]
+    // this.map = [
+    //   [red, green, green, green, red ],
+    //   [red, yellow, green, green ],
+    // ]
   }
 
   //___Methods___
@@ -57,15 +66,51 @@ export class Game {
     const heightCube = 52
     let offsetXField = 44
     let offsetYField = 490
+
+    let cubeCoords
+
+    let coords = []
+
     for (let i = this.map.length - 1; i >= 0; i--) {
       for (let j = 0; j < this.map[i].length; j++) {
+
         let cube = await loadImage(`./assets/images/${this.map[i][j]}.png`)
         this.ctx.drawImage(cube, offsetXField, offsetYField, widthCube, heightCube)
+        cubeCoords = [offsetXField, offsetXField + widthCube, offsetYField, offsetYField - heightCube]
+        
         offsetXField += widthCube
       }
+      coords.push(cubeCoords)
       offsetXField = 44
       offsetYField -= heightCube - 6
+
+  }
+  // console.log(coords)
+
+  this.canvas.addEventListener('click', (e) => {
+
+    for(let i=0; i<=coords.length - 1; i++) {
+    // console.log(coords)
+    // console.log(coords[i])
+
+      for(let j = 0; j<= coords[i].length - 1; j++) {
+        console.log(`e.clientX: ${e.clientX} >= coords[i][0] ${coords[i][0]}`)
+        console.log(`e.clientX: ${e.clientY} < coords[i][1] ${coords[i][1]}`)
+        console.log(`e.clientY: ${e.clientX} >= coords[i][2] ${coords[i][2]}`)
+        console.log(`e.clientY: ${e.clientY} < coords[i][3] ${coords[i][3]}`)
+        if (e.clientX >= coords[i][0] && e.clientY < coords[i][1]
+          && e.clientX >= coords[i][2] && e.clientY < coords[i][3]) 
+          {
+            console.log(`You clicked at cube`)
+          } else {
+            console.log('something went wrong')
+          }
+      }
+     
     }
+    
+  })
+
   }
 
   drawField() {
@@ -256,6 +301,7 @@ export class Game {
     this.ctx.fillText(numMoney, centerTextX - 8, offsetYInner + 3)
   }
   async initRender() {
+    // this.mouseClick()
     this.drawField()
     await this.drawingCubes()
     await this.drawLevelBlock()
