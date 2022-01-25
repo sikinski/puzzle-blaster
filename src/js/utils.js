@@ -39,3 +39,10 @@ export const defineText = (ctx, fz, font, color, baseline) => {
   ctx.fillStyle = `${color}`
   ctx.textBaseline = `${baseline}`
 }
+export const getMousePos = (canvas, e) => {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  }
+}
