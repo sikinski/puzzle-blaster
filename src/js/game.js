@@ -68,14 +68,14 @@ export class Game {
 
   async drawingCubes() {
     const widthCube = 42
-    const heightCube = 52
+    const heightCube = 46
     let offsetXField = 44
-    let offsetYField = 490
+    let offsetYField = 120
 
     let coords = []
     let colorsArr
 
-    for (let i = this.map.length - 1; i >= 0; i--) {
+    for (let i = 0; i < this.map.length; i++) {
       for (let j = 0; j < this.map[i].length; j++) {
         let cube = await loadImage(`./assets/images/${this.map[i][j]}.png`)
         this.ctx.drawImage(cube, offsetXField, offsetYField, widthCube, heightCube)
@@ -89,13 +89,13 @@ export class Game {
         offsetXField += widthCube
       }
       offsetXField = 44
-      offsetYField -= heightCube - 6
+      offsetYField += heightCube 
     }
 
     this.canvas.addEventListener('click', (e) => {
       const pos = getMousePos(this.canvas, e)
       let colorCube;
-      colorsArr = this.map.reverse().flat(1)
+      colorsArr = this.map.flat()
 
       for (let i = 0; i < coords.length; i++) {
         if (
@@ -104,7 +104,7 @@ export class Game {
           pos.y >= coords[i][2] &&
           pos.y <= coords[i][3]
         ) {
-          
+          // console.log(colorsArr)
           colorCube = colorsArr[i]
           
           console.log(`You clicked on ${colorCube} cube`)
@@ -114,7 +114,7 @@ export class Game {
   }
 
   drawField() {
-    drawRectWithRadius(this.ctx, 32, 107, 400, 445, 20)
+    drawRectWithRadius(this.ctx, 32, 107, 400, 440, 20)
     this.ctx.lineWidth = 7
     this.ctx.strokeStyle = '#252e6d'
     this.ctx.fillStyle = '#020526'
