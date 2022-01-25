@@ -73,14 +73,13 @@ export class Game {
     let offsetYField = 490
 
     let coords = []
-    // let lastCoords = []
 
     for (let i = this.map.length - 1; i >= 0; i--) {
       for (let j = 0; j < this.map[i].length; j++) {
         let cube = await loadImage(`./assets/images/${this.map[i][j]}.png`)
         this.ctx.drawImage(cube, offsetXField, offsetYField, widthCube, heightCube)
+        coords.push([offsetXField, offsetXField + widthCube, offsetYField,offsetYField + heightCube])
         offsetXField += widthCube
-        coords.push([offsetXField, offsetXField + widthCube, offsetYField,offsetYField - heightCube])
       }
       offsetXField = 44
       offsetYField -= heightCube - 6
@@ -88,21 +87,15 @@ export class Game {
 
     this.canvas.addEventListener('click', (e) => {
       const pos = getMousePos(this.canvas, e)
-      console.log(e)
-      console.log(pos.x)
-      console.log(pos.y)
 
       for (let i = 0; i < coords.length; i++) {
-
         if (
           pos.x >= coords[i][0] &&
-          pos.x < coords[i][1] &&
+          pos.x <= coords[i][1] &&
           pos.y >= coords[i][2] &&
-          pos.y < coords[i][3]
+          pos.y <= coords[i][3]
         ) {
           console.log(`You clicked at cube`)
-        } else {
-          console.log('something went wrong')
         }
       }
     })
