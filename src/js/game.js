@@ -73,12 +73,19 @@ export class Game {
     let offsetYField = 490
 
     let coords = []
+    let colorsArr
 
     for (let i = this.map.length - 1; i >= 0; i--) {
       for (let j = 0; j < this.map[i].length; j++) {
         let cube = await loadImage(`./assets/images/${this.map[i][j]}.png`)
         this.ctx.drawImage(cube, offsetXField, offsetYField, widthCube, heightCube)
-        coords.push([offsetXField, offsetXField + widthCube, offsetYField,offsetYField + heightCube])
+
+        coords.push([
+          offsetXField,
+          offsetXField + widthCube,
+          offsetYField,
+          offsetYField + heightCube,
+        ])
         offsetXField += widthCube
       }
       offsetXField = 44
@@ -87,6 +94,8 @@ export class Game {
 
     this.canvas.addEventListener('click', (e) => {
       const pos = getMousePos(this.canvas, e)
+      let colorCube;
+      colorsArr = this.map.reverse().flat(1)
 
       for (let i = 0; i < coords.length; i++) {
         if (
@@ -95,7 +104,10 @@ export class Game {
           pos.y >= coords[i][2] &&
           pos.y <= coords[i][3]
         ) {
-          console.log(`You clicked at cube`)
+          
+          colorCube = colorsArr[i]
+          
+          console.log(`You clicked on ${colorCube} cube`)
         }
       }
     })
