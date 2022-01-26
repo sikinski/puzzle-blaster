@@ -36,8 +36,6 @@ export class Game {
     const blue = this.colors.blue
     const purple = this.colors.purple
 
-    this.allColors = [red, green, yellow, blue, purple]
-
     this.coords = []
 
     this.map = [
@@ -80,7 +78,7 @@ export class Game {
   }
 
   getTailOnClick() {
-    this.canvas.addEventListener('click', (e) => {
+    this.canvas.addEventListener('click', async (e) => {
       const pos = getMousePos(this.canvas, e)
 
       for (let i = 0; i < this.coords.length; i++) {
@@ -98,19 +96,20 @@ export class Game {
           // get needed cube in this.map array
           let cubeInMap = this.map[cubeY][cubeX]
           let randomCube
-
+          const colors = Object.keys(this.colors)
+          console.log(colors)
           const generateCube = () => {
-            randomCube = Object.keys(this.colors)[Math.floor(Math.random() * 5)]
-            if(randomCube === cubeInMap) {
-              generateCube()
-            }
+            return colors[Math.floor(Math.random() * colors.length)]
+            // if(randomCube === cubeInMap) {
+            //   generateCube()
+            // }
           }
-          generateCube()
+          console.log(generateCube())
+          // console.log(`This color ${cubeInMap} is changed to ${randomCube}`)
 
-          console.log(`This color ${cubeInMap} is changed to ${randomCube}`)
-
-          this.map[cubeY].splice(cubeX, cubeX, randomCube);
-          this.drawingCubes()
+          this.map[cubeX][cubeY] = generateCube()
+          await this.drawingCubes
+          // this.map[cubeY].splice(cubeX, 1, randomCube);
           
           // cubeInMap 
           // if(
