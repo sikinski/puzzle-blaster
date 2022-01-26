@@ -5,7 +5,6 @@ import {
   defineText,
   getMousePos,
 } from './utils.js'
-// import { createMouse } from './mouseListener.js'
 
 export class Game {
   constructor(canvas) {
@@ -23,14 +22,6 @@ export class Game {
     this.moves = 30
     this.scores = 0
 
-    this.cubes = [
-      { name: 'red', path: './images/red.png' },
-      { name: 'green', path: './images/green.png' },
-      { name: 'blue', path: './images/blue.png' },
-      { name: 'purple', path: './images/purple.png' },
-      { name: 'yellow', path: './images/yellow.png' },
-    ]
-
     this.colors = {
       red: 'red',
       green: 'green',
@@ -38,14 +29,16 @@ export class Game {
       blue: 'blue',
       purple: 'purple',
     }
+
     const red = this.colors.red
     const green = this.colors.green
     const yellow = this.colors.yellow
     const blue = this.colors.blue
     const purple = this.colors.purple
 
-    // let clickX;
-    // let clickY;
+    this.allColors = [red, green, yellow, blue, purple]
+
+    this.coords = []
 
     this.map = [
       [red, green, green, green, yellow, yellow, red, red, red],
@@ -58,10 +51,6 @@ export class Game {
       [red, green, yellow, green, purple, yellow, red, red, red],
       [red, green, yellow, green, purple, yellow, red, red, red],
     ]
-    // this.map = [
-    //   [red, green, green, green, red ],
-    //   [red, yellow, green, green ],
-    // ]
   }
 
   //___Methods___
@@ -72,14 +61,12 @@ export class Game {
     let offsetXField = 44
     let offsetYField = 120
 
-    let coords = []
-
     for (let i = 0; i < this.map.length; i++) {
       for (let j = 0; j < this.map[i].length; j++) {
         let cube = await loadImage(`./assets/images/${this.map[i][j]}.png`)
         this.ctx.drawImage(cube, offsetXField, offsetYField, widthCube, heightCube)
 
-        coords.push([
+        this.coords.push([
           offsetXField,
           offsetXField + widthCube,
           offsetYField,
@@ -88,28 +75,47 @@ export class Game {
         offsetXField += widthCube
       }
       offsetXField = 44
-      offsetYField += heightCube 
+      offsetYField += heightCube
     }
+  }
 
+  getTailOnClick() {
     this.canvas.addEventListener('click', (e) => {
       const pos = getMousePos(this.canvas, e)
 
-      for (let i = 0; i < coords.length; i++) {
+      for (let i = 0; i < this.coords.length; i++) {
+        // check if we clicked on cube
         if (
-          pos.x >= coords[i][0] &&
-          pos.x <= coords[i][1] &&
-          pos.y >= coords[i][2] &&
-          pos.y <= coords[i][3]
+          pos.x >= this.coords[i][0] &&
+          pos.x <= this.coords[i][1] &&
+          pos.y >= this.coords[i][2] &&
+          pos.y <= this.coords[i][3]
         ) {
-          
+          // Find indexes for this.map array
           let cubeY = Math.floor(i / 9)
-          let cubeX = Math.floor(((i / 9) - cubeY) * 10)
+          let cubeX = Math.floor((i / 9 - cubeY) * 10)
 
-          console.log(`CubeY ${cubeY}`)
-          console.log(`CubeX ${cubeX}`)
-
+          // get needed cube in this.map array
           let cubeInMap = this.map[cubeY][cubeX]
-          console.log(cubeInMap)
+          let randomCube
+
+          const generateCube = () => {
+            randomCube = Object.keys(this.colors)[Math.floor(Math.random() * 5)]
+            if(randomCube === cubeInMap) {
+              generateCube()
+            }
+          }
+          generateCube()
+
+          console.log(`This color ${cubeInMap} is changed to ${randomCube}`)
+
+          this.map[cubeY].splice(cubeX, cubeX, randomCube);
+          this.drawingCubes()
+          
+          // cubeInMap 
+          // if(
+          //   cubeInMap[cubeY][cubeX] ===cubeInMap[cubeY - 1][cubeX]
+          //   )
         }
       }
     })
@@ -306,6 +312,7 @@ export class Game {
     // this.mouseClick()
     this.drawField()
     await this.drawingCubes()
+    this.getTailOnClick()
     await this.drawLevelBlock()
     this.drawProgress()
     await this.drawMoneyBlock()
