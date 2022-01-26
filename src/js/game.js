@@ -77,47 +77,35 @@ export class Game {
     }
   }
 
-  getTailOnClick() {
-    this.canvas.addEventListener('click', async (e) => {
-      const pos = getMousePos(this.canvas, e)
-
-      for (let i = 0; i < this.coords.length; i++) {
-        // check if we clicked on cube
-        if (
-          pos.x >= this.coords[i][0] &&
-          pos.x <= this.coords[i][1] &&
-          pos.y >= this.coords[i][2] &&
-          pos.y <= this.coords[i][3]
-        ) {
-          // Find indexes for this.map array
-          let cubeY = Math.floor(i / 9)
-          let cubeX = Math.floor((i / 9 - cubeY) * 10)
-
-          // get needed cube in this.map array
-          let cubeInMap = this.map[cubeY][cubeX]
-          let randomCube
-          const colors = Object.keys(this.colors)
-          console.log(colors)
-          const generateCube = () => {
-            return colors[Math.floor(Math.random() * colors.length)]
-            // if(randomCube === cubeInMap) {
-            //   generateCube()
-            // }
-          }
-          console.log(generateCube())
-          // console.log(`This color ${cubeInMap} is changed to ${randomCube}`)
-
-          this.map[cubeX][cubeY] = generateCube()
-          await this.drawingCubes
-          // this.map[cubeY].splice(cubeX, 1, randomCube);
-          
-          // cubeInMap 
-          // if(
-          //   cubeInMap[cubeY][cubeX] ===cubeInMap[cubeY - 1][cubeX]
-          //   )
-        }
-      }
-    })
+  changeCubesOnClick() {
+    this.canvas.addEventListener("click", async (e) => {
+      const generateCube = () => {
+        const colors = Object.keys(this.colors);
+        return colors[Math.floor(Math.random() * colors.length)];
+      };
+  
+      const pos = getMousePos(this.canvas, e);
+      // check if we click on cube or not
+      const cubeIndex = this.coords.findIndex(
+        ([x1, x2, y1, y2]) =>
+          pos.x >= x1 
+          && pos.x <= x2 
+          && pos.y >= y1 
+          && pos.y <= y2
+      );
+  
+      if (cubeIndex === -1) return;
+  
+      // get indexes for clicked cube in this.map array
+      const row = Math.floor(cubeIndex / this.map.length);
+      const col = cubeIndex % this.map.length;
+  
+      // get needed cube in this.map array
+      const clickedColor = this.map[row][col];
+  
+      this.map[row][col] = generateCube();
+      await this.drawingCubes();
+    });
   }
 
   drawField() {
@@ -311,7 +299,7 @@ export class Game {
     // this.mouseClick()
     this.drawField()
     await this.drawingCubes()
-    this.getTailOnClick()
+    this.changeCubesOnClick()
     await this.drawLevelBlock()
     this.drawProgress()
     await this.drawMoneyBlock()
