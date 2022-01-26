@@ -73,7 +73,6 @@ export class Game {
     let offsetYField = 120
 
     let coords = []
-    let colorsArr
 
     for (let i = 0; i < this.map.length; i++) {
       for (let j = 0; j < this.map[i].length; j++) {
@@ -94,8 +93,6 @@ export class Game {
 
     this.canvas.addEventListener('click', (e) => {
       const pos = getMousePos(this.canvas, e)
-      let colorCube;
-      colorsArr = this.map.flat()
 
       for (let i = 0; i < coords.length; i++) {
         if (
@@ -104,10 +101,15 @@ export class Game {
           pos.y >= coords[i][2] &&
           pos.y <= coords[i][3]
         ) {
-          // console.log(colorsArr)
-          colorCube = colorsArr[i]
           
-          console.log(`You clicked on ${colorCube} cube`)
+          let cubeY = Math.floor(i / 9)
+          let cubeX = Math.floor(((i / 9) - cubeY) * 10)
+
+          console.log(`CubeY ${cubeY}`)
+          console.log(`CubeX ${cubeX}`)
+
+          let cubeInMap = this.map[cubeY][cubeX]
+          console.log(cubeInMap)
         }
       }
     })
