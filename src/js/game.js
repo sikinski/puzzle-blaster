@@ -53,7 +53,7 @@ export class Game {
 
   //___Methods___
 
-  async drawingCubes() {
+  async renderMap() {
     const widthCube = 42
     const heightCube = 46
     let offsetXField = 44
@@ -85,18 +85,14 @@ export class Game {
       };
   
       const pos = getMousePos(this.canvas, e);
-      // check if we click on cube or not
+  
       const cubeIndex = this.coords.findIndex(
         ([x1, x2, y1, y2]) =>
-          pos.x >= x1 
-          && pos.x <= x2 
-          && pos.y >= y1 
-          && pos.y <= y2
+          pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
       );
   
       if (cubeIndex === -1) return;
   
-      // get indexes for clicked cube in this.map array
       const row = Math.floor(cubeIndex / this.map.length);
       const col = cubeIndex % this.map.length;
   
@@ -104,7 +100,7 @@ export class Game {
       const clickedColor = this.map[row][col];
   
       this.map[row][col] = generateCube();
-      await this.drawingCubes();
+      await this.renderMap();
     });
   }
 
@@ -298,7 +294,7 @@ export class Game {
   async initRender() {
     // this.mouseClick()
     this.drawField()
-    await this.drawingCubes()
+    await this.renderMap()
     this.changeCubesOnClick()
     await this.drawLevelBlock()
     this.drawProgress()
