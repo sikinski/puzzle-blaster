@@ -105,78 +105,53 @@ export class Game {
       console.log(processed[0])
       console.log(processed[0] - 1)
 
+      const getCubeByIndex = (index) => {
+        return this.map[Math.floor(index / this.map.length)][index % this.map.length]
+      }
+
       while (processed.length) {
         const leftCube = processed[0] - 1
         const rightCube = processed[0] + 1
         const topCube = processed[0] - 9
         const bottomCube = processed[0] + 9
         // to left
-        if (!willGenerate.has(processed[0])) {
-          willGenerate.add(processed[0])
-        }
+        willGenerate.add(processed[0])
         if (
           !(leftCube % 8 === 0) &&
-          this.map[Math.floor(leftCube / this.map.length)][leftCube % this.map.length] ===
-            clickedColor &&
+          getCubeByIndex(leftCube) === clickedColor &&
           !willGenerate.has(leftCube)
         ) {
-          console.log('if 1')
-          console.log(processed[0])
-          console.log(willGenerate)
-
-          processed.shift()
-
           processed.push(leftCube)
-          console.log(`processed: ${processed}`)
         }
         // to top
         if (
           !(topCube % 8 === 0) &&
-          this.map[Math.floor(topCube / this.map.length)][topCube % this.map.length] ===
-            clickedColor &&
+          getCubeByIndex(topCube) === clickedColor &&
           !willGenerate.has(topCube)
         ) {
-          console.log('if 2')
-          console.log(processed[0])
-          console.log(willGenerate)
-
-          processed.shift()
-
           processed.push(topCube)
-          console.log(`processed: ${processed}`)
         }
         // to right
         if (
           !(rightCube % 8 === 0) &&
-          this.map[Math.floor(rightCube / this.map.length)][rightCube % this.map.length] ===
-            clickedColor &&
+          getCubeByIndex(rightCube) === clickedColor &&
           !willGenerate.has(rightCube)
         ) {
-          console.log('if 3')
-          console.log(processed[0])
-          console.log(willGenerate)
-
-          processed.shift()
-
           processed.push(rightCube)
-          console.log(`processed: ${processed}`)
         }
         // to bottom
         if (
           !(bottomCube % 8 === 0) &&
-          this.map[Math.floor(bottomCube / this.map.length)][bottomCube % this.map.length] ===
-            clickedColor &&
+          getCubeByIndex(bottomCube) === clickedColor &&
           !willGenerate.has(bottomCube)
         ) {
-          console.log('if 4')
-          console.log(processed[0])
-          
-          console.log(willGenerate)
-          processed.shift()
-
           processed.push(bottomCube)
           console.log(`processed: ${processed}`)
         }
+        console.log(willGenerate)
+        console.log(processed)
+
+        processed.shift()
         console.log(processed)
       }
 
