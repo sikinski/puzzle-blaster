@@ -78,30 +78,111 @@ export class Game {
   }
 
   changeCubesOnClick() {
-    this.canvas.addEventListener("click", async (e) => {
+    this.canvas.addEventListener('click', async (e) => {
       const generateCube = () => {
-        const colors = Object.keys(this.colors);
-        return colors[Math.floor(Math.random() * colors.length)];
-      };
-  
-      const pos = getMousePos(this.canvas, e);
-  
+        const colors = Object.keys(this.colors)
+        return colors[Math.floor(Math.random() * colors.length)]
+      }
+
+      const pos = getMousePos(this.canvas, e)
+
       const cubeIndex = this.coords.findIndex(
-        ([x1, x2, y1, y2]) =>
-          pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
-      );
-  
-      if (cubeIndex === -1) return;
-  
-      const row = Math.floor(cubeIndex / this.map.length);
-      const col = cubeIndex % this.map.length;
-  
+        ([x1, x2, y1, y2]) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
+      )
+
+      if (cubeIndex === -1) return
+
+      const row = Math.floor(cubeIndex / this.map.length)
+      const col = cubeIndex % this.map.length
+
       // get needed cube in this.map array
-      const clickedColor = this.map[row][col];
-  
-      this.map[row][col] = generateCube();
-      await this.renderMap();
-    });
+      const clickedColor = this.map[row][col]
+
+      let processed = []
+      let willGenerate = new Set()
+
+      processed.push(cubeIndex)
+      console.log(processed[0])
+      console.log(processed[0] - 1)
+
+      while (processed.length) {
+        const leftCube = processed[0] - 1
+        const rightCube = processed[0] + 1
+        const topCube = processed[0] - 9
+        const bottomCube = processed[0] + 9
+        // to left
+        if (!willGenerate.has(processed[0])) {
+          willGenerate.add(processed[0])
+        }
+        if (
+          !(leftCube % 8 === 0) &&
+          this.map[Math.floor(leftCube / this.map.length)][leftCube % this.map.length] ===
+            clickedColor &&
+          !willGenerate.has(leftCube)
+        ) {
+          console.log('if 1')
+          console.log(processed[0])
+          console.log(willGenerate)
+
+          processed.shift()
+
+          processed.push(leftCube)
+          console.log(`processed: ${processed}`)
+        }
+        // to top
+        if (
+          !(topCube % 8 === 0) &&
+          this.map[Math.floor(topCube / this.map.length)][topCube % this.map.length] ===
+            clickedColor &&
+          !willGenerate.has(topCube)
+        ) {
+          console.log('if 2')
+          console.log(processed[0])
+          console.log(willGenerate)
+
+          processed.shift()
+
+          processed.push(topCube)
+          console.log(`processed: ${processed}`)
+        }
+        // to right
+        if (
+          !(rightCube % 8 === 0) &&
+          this.map[Math.floor(rightCube / this.map.length)][rightCube % this.map.length] ===
+            clickedColor &&
+          !willGenerate.has(rightCube)
+        ) {
+          console.log('if 3')
+          console.log(processed[0])
+          console.log(willGenerate)
+
+          processed.shift()
+
+          processed.push(rightCube)
+          console.log(`processed: ${processed}`)
+        }
+        // to bottom
+        if (
+          !(bottomCube % 8 === 0) &&
+          this.map[Math.floor(bottomCube / this.map.length)][bottomCube % this.map.length] ===
+            clickedColor &&
+          !willGenerate.has(bottomCube)
+        ) {
+          console.log('if 4')
+          console.log(processed[0])
+          
+          console.log(willGenerate)
+          processed.shift()
+
+          processed.push(bottomCube)
+          console.log(`processed: ${processed}`)
+        }
+        console.log(processed)
+      }
+
+      // this.map[row][col] = generateCube()
+      // await this.renderMap()
+    })
   }
 
   drawField() {
