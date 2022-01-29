@@ -76,7 +76,9 @@ export class Game {
       offsetYField += heightCube
     }
   }
-
+  getCubeByIndex(index) {
+    return this.map[Math.floor(index / this.map.length)][index % this.map.length]
+  }
   changeCubesOnClick() {
     this.canvas.addEventListener('click', async (e) => {
       const generateCube = () => {
@@ -102,61 +104,54 @@ export class Game {
       let willGenerate = new Set()
 
       processed.push(cubeIndex)
-      console.log(processed[0])
-      console.log(processed[0] - 1)
-
-      const getCubeByIndex = (index) => {
-        return this.map[Math.floor(index / this.map.length)][index % this.map.length]
-      }
 
       while (processed.length) {
-        const leftCube = processed[0] - 1
-        const rightCube = processed[0] + 1
-        const topCube = processed[0] - 9
-        const bottomCube = processed[0] + 9
+        const current = processed.shift()
+        console.log(current)
+
+        willGenerate.add(current)
+
+        const leftCube = current - 1
+        const rightCube = current + 1
+        const topCube = current - 9
+        const bottomCube = current + 9
+
         // to left
-        willGenerate.add(processed[0])
         if (
-          !(leftCube % 8 === 0) &&
-          getCubeByIndex(leftCube) === clickedColor &&
+          (leftCube + 1) % 9 &&
+          leftCube >= 0 &&
+          this.getCubeByIndex(leftCube) === clickedColor &&
           !willGenerate.has(leftCube)
         ) {
           processed.push(leftCube)
         }
         // to top
         if (
-          !(topCube % 8 === 0) &&
-          getCubeByIndex(topCube) === clickedColor &&
+          topCube > 0 &&
+          this.getCubeByIndex(topCube) === clickedColor &&
           !willGenerate.has(topCube)
         ) {
           processed.push(topCube)
         }
         // to right
         if (
-          !(rightCube % 8 === 0) &&
-          getCubeByIndex(rightCube) === clickedColor &&
+          !(rightCube % 9 === 0) &&
+          rightCube < 81 &&
+          this.getCubeByIndex(rightCube) === clickedColor &&
           !willGenerate.has(rightCube)
         ) {
           processed.push(rightCube)
         }
         // to bottom
         if (
-          !(bottomCube % 8 === 0) &&
-          getCubeByIndex(bottomCube) === clickedColor &&
+          bottomCube < 81 &&
+          this.getCubeByIndex(bottomCube) === clickedColor &&
           !willGenerate.has(bottomCube)
         ) {
           processed.push(bottomCube)
-          console.log(`processed: ${processed}`)
         }
         console.log(willGenerate)
-        console.log(processed)
-
-        processed.shift()
-        console.log(processed)
       }
-
-      // this.map[row][col] = generateCube()
-      // await this.renderMap()
     })
   }
 
@@ -351,6 +346,7 @@ export class Game {
     // this.mouseClick()
     this.drawField()
     await this.renderMap()
+    // this.getCubeByIndex()
     this.changeCubesOnClick()
     await this.drawLevelBlock()
     this.drawProgress()
