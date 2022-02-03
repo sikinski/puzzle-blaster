@@ -39,21 +39,37 @@ export class Game {
     this.coords = []
 
     this.map = [
-      [red, green, green, green, yellow, yellow, red, red, red],
+      [red, yellow, green, green, yellow, yellow, red, red, red],
       [red, yellow, green, green, purple, yellow, blue, blue, red],
       [blue, blue, green, green, yellow, yellow, red, red, red],
-      [blue, blue, blue, blue, yellow, yellow, red, red, red],
+      [blue, blue, blue, green, yellow, yellow, red, red, red],
       [blue, blue, green, green, purple, yellow, red, red, red],
-      [red, green, green, green, purple, yellow, red, red, red],
-      [red, purple, purple, purple, purple, purple, purple, purple, purple],
+      [red, green, green, green, purple, red, red, red, red],
+      [red, purple, purple, purple, null, purple, purple, purple, purple],
       [red, green, yellow, green, purple, yellow, red, red, red],
       [red, green, yellow, green, purple, yellow, red, red, red],
+    ]
+
+    this.cubesPaths = [
+      { name: 'blue', path: './assets/images/blue.png' },
+      { name: 'red', path: './assets/images/red.png' },
+      { name: 'green', path: './assets/images/green.png' },
+      { name: 'yellow', path: './assets/images/yellow.png' },
+      { name: 'purple', path: './assets/images/purple.png' },
     ]
   }
 
   //___Methods___
 
-  async renderMap() {
+  async preloadCubesImgs() {
+    this.cubeImages = Object.fromEntries(
+      await Promise.all(
+        this.cubesPaths.map(async ({ name, path }) => [name, await loadImage(path)])
+      )
+    );
+  }
+  
+  renderMap() {
     const widthCube = 42
     const heightCube = 46
     let offsetXField = 44
@@ -61,8 +77,10 @@ export class Game {
 
     for (let i = 0; i < this.map.length; i++) {
       for (let j = 0; j < this.map[i].length; j++) {
-        let cube = await loadImage(`./assets/images/${this.map[i][j]}.png`)
-        this.ctx.drawImage(cube, offsetXField, offsetYField, widthCube, heightCube)
+        if (this.map[i][j]) {
+          let cube = this.cubeImages[this.map[i][j]]
+          this.ctx.drawImage(cube, offsetXField, offsetYField, widthCube, heightCube)
+        }
 
         this.coords.push([
           offsetXField,
@@ -76,9 +94,23 @@ export class Game {
       offsetYField += heightCube
     }
   }
+  drawField() {
+    drawRectWithRadius(this.ctx, 32, 107, 400, 440, 20)
+    this.ctx.lineWidth = 7
+    this.ctx.strokeStyle = '#252e6d'
+    this.ctx.fillStyle = '#020526'
+    this.ctx.fill()
+    this.ctx.stroke()
+
+    this.renderMap()
+  }
+
   getCubeByIndex(index) {
     return this.map[Math.floor(index / this.map.length)][index % this.map.length]
   }
+  // changeState() {
+
+  // }
   changeCubesOnClick() {
     this.canvas.addEventListener('click', async (e) => {
       const generateCube = () => {
@@ -97,7 +129,7 @@ export class Game {
       const row = Math.floor(cubeIndex / this.map.length)
       const col = cubeIndex % this.map.length
 
-      // get needed cube in this.map array
+      // Algorithm to find all the same cubes on click
       const clickedColor = this.map[row][col]
 
       let processed = []
@@ -152,16 +184,16 @@ export class Game {
         }
         console.log(willGenerate)
       }
-    })
-  }
 
-  drawField() {
-    drawRectWithRadius(this.ctx, 32, 107, 400, 440, 20)
-    this.ctx.lineWidth = 7
-    this.ctx.strokeStyle = '#252e6d'
-    this.ctx.fillStyle = '#020526'
-    this.ctx.fill()
-    this.ctx.stroke()
+      if (willGenerate.size > 3) {
+        for (let cube of willGenerate) {
+          this.map[Math.floor(cube / this.map.length)][cube % this.map.length] = null
+        }
+      }
+      this.ctx.clearRect(44, 120, 400, 440)
+      this.drawField()
+      this.renderMap()
+    })
   }
 
   async drawLevelBlock() {
@@ -225,7 +257,7 @@ export class Game {
     const marginText = 25
     const circleWidth = 32
     const moneyOffsetX = 583
-    const widthText = this.ctx.measureText(this.money).width // some trubls width json.str: idk why it works without this method but it does
+    const widthText = this.ctx.measureText(this.money).width 
     const widthMoneyBlock = widthText + circleWidth + marginText * 2
 
     const centerTextX = moneyOffsetX + (widthMoneyBlock - widthText) / 2 + circleWidth / 2
@@ -269,7 +301,7 @@ export class Game {
     this.ctx.fill()
     this.ctx.closePath()
 
-    const offsetXCircleMoves = offsetXTurns + 156 / 2.8 // 2.8 because shadow
+    const offsetXCircleMoves = offsetXTurns + 156 / 2.8 
 
     const movesPic = await loadImage('assets/images/moves.png')
 
@@ -343,10 +375,9 @@ export class Game {
     this.ctx.fillText(numMoney, centerTextX - 8, offsetYInner + 3)
   }
   async initRender() {
-    // this.mouseClick()
+    await this.preloadCubesImgs()
     this.drawField()
-    await this.renderMap()
-    // this.getCubeByIndex()
+    this.renderMap()
     this.changeCubesOnClick()
     await this.drawLevelBlock()
     this.drawProgress()
