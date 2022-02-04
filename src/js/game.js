@@ -18,9 +18,13 @@ export class Game {
   init() {
     this.level = 1
     this.progress = 0
+    this.maxProgress = 307
     this.money = 300
     this.moves = 30
     this.scores = 0
+    this.neededScores = 150
+
+    this.selectedCubes = new Set()
 
     this.colors = {
       red: 'red',
@@ -108,9 +112,7 @@ export class Game {
   getCubeByIndex(index) {
     return this.map[Math.floor(index / this.map.length)][index % this.map.length]
   }
-  // changeState() {
 
-  // }
   changeCubesOnClick() {
     this.canvas.addEventListener('click', async (e) => {
       const generateCube = () => {
@@ -133,15 +135,13 @@ export class Game {
       const clickedColor = this.map[row][col]
 
       let processed = []
-      let willGenerate = new Set()
 
       processed.push(cubeIndex)
 
       while (processed.length) {
         const current = processed.shift()
-        console.log(current)
 
-        willGenerate.add(current)
+        this.selectedCubes.add(current)
 
         const leftCube = current - 1
         const rightCube = current + 1
@@ -153,7 +153,7 @@ export class Game {
           (leftCube + 1) % 9 &&
           leftCube >= 0 &&
           this.getCubeByIndex(leftCube) === clickedColor &&
-          !willGenerate.has(leftCube)
+          !this.selectedCubes.has(leftCube)
         ) {
           processed.push(leftCube)
         }
@@ -161,7 +161,7 @@ export class Game {
         if (
           topCube > 0 &&
           this.getCubeByIndex(topCube) === clickedColor &&
-          !willGenerate.has(topCube)
+          !this.selectedCubes.has(topCube)
         ) {
           processed.push(topCube)
         }
@@ -170,7 +170,7 @@ export class Game {
           !(rightCube % 9 === 0) &&
           rightCube < 81 &&
           this.getCubeByIndex(rightCube) === clickedColor &&
-          !willGenerate.has(rightCube)
+          !this.selectedCubes.has(rightCube)
         ) {
           processed.push(rightCube)
         }
@@ -178,15 +178,14 @@ export class Game {
         if (
           bottomCube < 81 &&
           this.getCubeByIndex(bottomCube) === clickedColor &&
-          !willGenerate.has(bottomCube)
+          !this.selectedCubes.has(bottomCube)
         ) {
           processed.push(bottomCube)
         }
-        console.log(willGenerate)
       }
 
-      if (willGenerate.size >= 3) {
-        for (let cube of willGenerate) {
+      if (this.selectedCubes.size >= 3) {
+        for (let cube of this.selectedCubes) {
           this.map[Math.floor(cube / this.map.length)][cube % this.map.length] = null
         }
       }
@@ -215,7 +214,7 @@ export class Game {
           this.map[j][i] = cols[i][j]
         }
       }
-
+      await this.changeState()
       this.ctx.clearRect(44, 120, 400, 440)
       this.drawField()
       this.renderMap()
@@ -249,7 +248,6 @@ export class Game {
   }
 
   drawProgress() {
-    const maxWidthProgressLine = 307
     const progressHeading = 'Прогресс'
 
     // block
@@ -263,7 +261,7 @@ export class Game {
     this.ctx.fillText(progressHeading, 350, 5)
 
     // bg progress line
-    drawRectWithRadius(this.ctx, 235, 27, maxWidthProgressLine, 24, 15)
+    drawRectWithRadius(this.ctx, 235, 27, this.maxProgress, 24, 15)
     this.ctx.fillStyle = '#011a3b'
     this.ctx.fill()
     this.ctx.closePath()
@@ -400,6 +398,22 @@ export class Game {
     defineText(this.ctx, '18px', 'Marvin', 'white', 'top')
     this.ctx.fillText(numMoney, centerTextX - 8, offsetYInner + 3)
   }
+  async changeState() {
+    // Change progress
+    const increaseForOneMove = this.maxProgress / this.neededScores
+
+    this.progress += increaseForOneMove
+
+    this.drawProgress()
+
+    // Change moves and scores
+    this.moves--
+    this.scores += this.selectedCubes.size
+    await this.drawMovesAndScores()
+
+
+  }
+
   async initRender() {
     await this.preloadCubesImgs()
     this.drawField()
