@@ -61,6 +61,15 @@ export class Game {
       { name: 'yellow', path: './assets/images/yellow.png' },
       { name: 'purple', path: './assets/images/purple.png' },
     ]
+
+    this.imgsPaths = [
+      { name: 'level-block', path: './assets/images/level-block.png' },
+      { name: 'money-block', path: './assets/images/money-block.png' },
+      { name: 'plus-btn', path: './assets/images/plus.png' },
+      { name: 'pause-btn', path: './assets/images/pause.png' },
+      { name: 'moves-round', path: './assets/images/moves.png' },
+      { name: 'rounded-rectangle', path: './assets/images/rounded-rectangle.png' },
+    ]
   }
 
   //___Methods___
@@ -72,6 +81,12 @@ export class Game {
       )
     )
   }
+  async preloadImgs() {
+    this.imgs = {};
+    for (const { name, path } of this.imgsPaths) {
+      this.imgs[name] = await loadImage(path)
+    }
+}
 
   renderMap() {
     const widthCube = 42
@@ -221,9 +236,9 @@ export class Game {
     })
   }
 
-  async drawLevelBlock() {
-    const levelPic = await loadImage('./assets/images/level-block.png')
-
+  drawLevelBlock() {
+    const levelPic = this.imgs['level-block']
+    
     const marginText = 25
     const circleWidth = 32
     const levelOffsetX = 99
@@ -275,8 +290,8 @@ export class Game {
     this.ctx.closePath()
   }
 
-  async drawMoneyBlock() {
-    const moneyPic = await loadImage('./assets/images/money-block.png')
+  drawMoneyBlock() {
+    const moneyPic = this.imgs['money-block']
 
     const marginText = 25
     const circleWidth = 32
@@ -301,18 +316,18 @@ export class Game {
     this.ctx.closePath()
 
     // plus money btn
-    const plusPic = await loadImage('assets/images/plus.png')
+    const plusPic = this.imgs['plus-btn']
 
     this.ctx.drawImage(plusPic, moneyOffsetX + widthMoneyBlock + 5, 21, 30, 30)
   }
 
-  async drawPauseBtn() {
-    const pausePic = await loadImage('assets/images/pause.png')
+  drawPauseBtn() {
+    const pausePic = this.imgs['pause-btn']
 
     this.ctx.drawImage(pausePic, 776, 5, 67, 67)
   }
 
-  async drawMovesAndScores() {
+  drawMovesAndScores() {
     const offsetXTurns = 536
     const offsetYTurns = 134
     const widthMovesBlock = 262
@@ -327,7 +342,7 @@ export class Game {
 
     const offsetXCircleMoves = offsetXTurns + 156 / 2.8
 
-    const movesPic = await loadImage('assets/images/moves.png')
+    const movesPic = this.imgs['moves-round']
 
     this.ctx.drawImage(movesPic, offsetXCircleMoves, offsetYTurns, 156, 156)
 
@@ -358,13 +373,13 @@ export class Game {
     this.ctx.fillText(this.scores, centerScoresX, 328)
   }
 
-  async drawBonuses(numberCard, numMoney) {
+  drawBonuses(numberCard, numMoney) {
     const bonusHeading = 'Бонусы'
     defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
     this.ctx.fillText(bonusHeading, 618, 410)
 
     // Drawing an outer block
-    const bonusCardPic = await loadImage('./assets/images/roundedRectangle.png')
+    const bonusCardPic = this.imgs['rounded-rectangle']
 
     const offsetX = 412
     const widthCard = 100
@@ -398,7 +413,7 @@ export class Game {
     defineText(this.ctx, '18px', 'Marvin', 'white', 'top')
     this.ctx.fillText(numMoney, centerTextX - 8, offsetYInner + 3)
   }
-  async changeState() {
+  changeState() {
     // Change progress
     const increaseForOneMove = this.maxProgress / this.neededScores
 
@@ -409,23 +424,22 @@ export class Game {
     // Change moves and scores
     this.moves--
     this.scores += this.selectedCubes.size
-    await this.drawMovesAndScores()
-
-
+    this.drawMovesAndScores()
   }
 
   async initRender() {
     await this.preloadCubesImgs()
+    await this.preloadImgs()
     this.drawField()
     this.renderMap()
     this.changeCubesOnClick()
-    await this.drawLevelBlock()
+    this.drawLevelBlock()
     this.drawProgress()
-    await this.drawMoneyBlock()
-    await this.drawPauseBtn()
-    await this.drawMovesAndScores()
-    await this.drawBonuses(1, '5')
-    await this.drawBonuses(2, '3')
-    await this.drawBonuses(3, '10')
+    this.drawMoneyBlock()
+    this.drawPauseBtn()
+    this.drawMovesAndScores()
+    this.drawBonuses(1, '5')
+    this.drawBonuses(2, '3')
+    this.drawBonuses(3, '10')
   }
 }
