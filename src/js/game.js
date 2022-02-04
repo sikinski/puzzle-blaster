@@ -45,7 +45,7 @@ export class Game {
       [blue, blue, blue, green, yellow, yellow, red, red, red],
       [blue, blue, green, green, purple, yellow, red, red, red],
       [red, green, green, green, purple, red, red, red, red],
-      [red, purple, purple, purple, null, purple, purple, purple, purple],
+      [red, purple, purple, purple, blue, purple, purple, purple, purple],
       [red, green, yellow, green, purple, yellow, red, red, red],
       [red, green, yellow, green, purple, yellow, red, red, red],
     ]
@@ -66,9 +66,9 @@ export class Game {
       await Promise.all(
         this.cubesPaths.map(async ({ name, path }) => [name, await loadImage(path)])
       )
-    );
+    )
   }
-  
+
   renderMap() {
     const widthCube = 42
     const heightCube = 46
@@ -185,11 +185,37 @@ export class Game {
         console.log(willGenerate)
       }
 
-      if (willGenerate.size > 3) {
+      if (willGenerate.size >= 3) {
         for (let cube of willGenerate) {
           this.map[Math.floor(cube / this.map.length)][cube % this.map.length] = null
         }
       }
+      this.ctx.clearRect(44, 120, 400, 440)
+      this.drawField()
+      this.renderMap()
+
+      // Falling
+      let cols = []
+
+      for (let i = 0; i < this.map.length; i++) {
+        let col = []
+        for (let j = 0; j < this.map.length; j++) {
+          if (this.map[j][i] !== null) {
+            col.push(this.map[j][i])
+          }
+        }
+        while (col.length < this.map.length) {
+          col.unshift(generateCube())
+        }
+        cols.push(col)
+      }
+
+      for (let i = 0; i < this.map.length; i++) {
+        for (let j = this.map[i].length - 1; j >= 0; j--) {
+          this.map[j][i] = cols[i][j]
+        }
+      }
+
       this.ctx.clearRect(44, 120, 400, 440)
       this.drawField()
       this.renderMap()
@@ -257,7 +283,7 @@ export class Game {
     const marginText = 25
     const circleWidth = 32
     const moneyOffsetX = 583
-    const widthText = this.ctx.measureText(this.money).width 
+    const widthText = this.ctx.measureText(this.money).width
     const widthMoneyBlock = widthText + circleWidth + marginText * 2
 
     const centerTextX = moneyOffsetX + (widthMoneyBlock - widthText) / 2 + circleWidth / 2
@@ -301,7 +327,7 @@ export class Game {
     this.ctx.fill()
     this.ctx.closePath()
 
-    const offsetXCircleMoves = offsetXTurns + 156 / 2.8 
+    const offsetXCircleMoves = offsetXTurns + 156 / 2.8
 
     const movesPic = await loadImage('assets/images/moves.png')
 
