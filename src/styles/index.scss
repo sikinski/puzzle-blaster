@@ -1,7 +1,21 @@
 @font-face {
-  font-family: 'Inter';
-  src: url('../fonts/Inter.ttf');
+  font-family: 'Marvin';
+  src: url(../fonts/marvin-reg.ttf);
+  font-weight: normal;
+  font-style: normal;
 }
-
-@import 'variables';
-@import 'scaffolding';
+html, body {
+  height: 100%;
+}
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  width: auto;
+  height: 100%;
+  text-align: center;
+  background-color: black;
+  font-family: 'Marvin';
+}
