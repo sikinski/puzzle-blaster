@@ -22,9 +22,7 @@ export class Game {
     this.money = 300
     this.moves = 30
     this.scores = 0
-    this.neededScores = 150
-
-    this.selectedCubes = new Set()
+    this.neededScores = 1650
 
     this.colors = {
       red: 'red',
@@ -82,11 +80,11 @@ export class Game {
     )
   }
   async preloadImgs() {
-    this.imgs = {};
+    this.imgs = {}
     for (const { name, path } of this.imgsPaths) {
       this.imgs[name] = await loadImage(path)
     }
-}
+  }
 
   renderMap() {
     const widthCube = 42
@@ -150,13 +148,13 @@ export class Game {
       const clickedColor = this.map[row][col]
 
       let processed = []
-
+      let selectedCubes = new Set()
       processed.push(cubeIndex)
 
       while (processed.length) {
         const current = processed.shift()
 
-        this.selectedCubes.add(current)
+        selectedCubes.add(current)
 
         const leftCube = current - 1
         const rightCube = current + 1
@@ -168,7 +166,7 @@ export class Game {
           (leftCube + 1) % 9 &&
           leftCube >= 0 &&
           this.getCubeByIndex(leftCube) === clickedColor &&
-          !this.selectedCubes.has(leftCube)
+          !selectedCubes.has(leftCube)
         ) {
           processed.push(leftCube)
         }
@@ -176,7 +174,7 @@ export class Game {
         if (
           topCube > 0 &&
           this.getCubeByIndex(topCube) === clickedColor &&
-          !this.selectedCubes.has(topCube)
+          !selectedCubes.has(topCube)
         ) {
           processed.push(topCube)
         }
@@ -185,7 +183,7 @@ export class Game {
           !(rightCube % 9 === 0) &&
           rightCube < 81 &&
           this.getCubeByIndex(rightCube) === clickedColor &&
-          !this.selectedCubes.has(rightCube)
+          !selectedCubes.has(rightCube)
         ) {
           processed.push(rightCube)
         }
@@ -193,16 +191,15 @@ export class Game {
         if (
           bottomCube < 81 &&
           this.getCubeByIndex(bottomCube) === clickedColor &&
-          !this.selectedCubes.has(bottomCube)
+          !selectedCubes.has(bottomCube)
         ) {
           processed.push(bottomCube)
         }
       }
 
-      if (this.selectedCubes.size >= 3) {
-        for (let cube of this.selectedCubes) {
-          this.map[Math.floor(cube / this.map.length)][cube % this.map.length] = null
-        }
+      if (selectedCubes.size < 3) return
+      for (let cube of selectedCubes) {
+        this.map[Math.floor(cube / this.map.length)][cube % this.map.length] = null
       }
       this.ctx.clearRect(44, 120, 400, 440)
       this.drawField()
@@ -213,11 +210,12 @@ export class Game {
 
       for (let i = 0; i < this.map.length; i++) {
         let col = []
-        for (let j = 0; j < this.map.length; j++) {
+        for (let j = 0; j < this.map[i].length; j++) {
           if (this.map[j][i] !== null) {
             col.push(this.map[j][i])
           }
         }
+        console.log(col)
         while (col.length < this.map.length) {
           col.unshift(generateCube())
         }
@@ -229,16 +227,18 @@ export class Game {
           this.map[j][i] = cols[i][j]
         }
       }
-      await this.changeState()
+
+      this.changeState()
       this.ctx.clearRect(44, 120, 400, 440)
       this.drawField()
       this.renderMap()
     })
   }
+  в
 
   drawLevelBlock() {
     const levelPic = this.imgs['level-block']
-    
+
     const marginText = 25
     const circleWidth = 32
     const levelOffsetX = 99
@@ -282,12 +282,19 @@ export class Game {
     this.ctx.closePath()
 
     // actual progress line
-    drawRectWithRadius(this.ctx, 235, 27, this.progress, 24, 15)
-    if (this.progress > 30) {
+    if (this.progress <= this.maxProgress) {
+      drawRectWithRadius(this.ctx, 235, 27, this.progress, 24, 15)
+      if (this.progress > 30) {
+        this.ctx.fillStyle = '#7ae400'
+        this.ctx.fill()
+      }
+      this.ctx.closePath()
+    } else {
+      drawRectWithRadius(this.ctx, 235, 27, this.maxProgress, 24, 15)
       this.ctx.fillStyle = '#7ae400'
       this.ctx.fill()
+      this.ctx.closePath()
     }
-    this.ctx.closePath()
   }
 
   drawMoneyBlock() {
@@ -351,7 +358,11 @@ export class Game {
     const centerMovesY = offsetYTurns + 156 / 2.8
 
     defineText(this.ctx, '44px', 'Marvin', 'white', 'right')
-    this.ctx.fillText(this.moves, centerMovesX, centerMovesY)
+    if (this.moves >= 0) {
+      this.ctx.fillText(this.moves, centerMovesX, centerMovesY)
+    } else {
+      this.ctx.fillText('0', centerMovesX, centerMovesY)
+    }
 
     // scores block
     const widthScoresBlock = 212
@@ -415,16 +426,21 @@ export class Game {
   }
   changeState() {
     // Change progress
-    const increaseForOneMove = this.maxProgress / this.neededScores
-
-    this.progress += increaseForOneMove
-
-    this.drawProgress()
-
+    // const increaseForOneMove = 30
+    // const percentScores = (this.neededScores * this.scores) / 100
+    // const increaseProgress = () => {
+    //   console.log(Math.floor((this.progress = (percentScores * this.maxProgress) / 100) / 30))
+    //   // return Math.floor((this.progress = percentScores * this.maxProgress / 100) / 30)
+    // }
+    // increaseProgress()
+    // while (this.moves >= 0) {
+    //   this.progress += increaseForOneMove
+    // }
+    // this.drawProgress()
     // Change moves and scores
-    this.moves--
-    this.scores += this.selectedCubes.size
-    this.drawMovesAndScores()
+    // this.moves--
+    // this.scores += this.selectedCubes.size
+    // this.drawMovesAndScores()
   }
 
   async initRender() {
