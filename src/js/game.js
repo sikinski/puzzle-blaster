@@ -3,6 +3,7 @@ import {
   drawHalfRectWithRadius,
   loadImage,
   defineText,
+  centerText,
   getMousePos,
 } from './utils.js'
 
@@ -22,7 +23,7 @@ export class Game {
     this.money = 300
     this.moves = 30
     this.scores = 0
-    this.neededScores = 1650
+    this.neededScores = 165
 
     this.colors = {
       red: 'red',
@@ -215,7 +216,6 @@ export class Game {
             col.push(this.map[j][i])
           }
         }
-        console.log(col)
         while (col.length < this.map.length) {
           col.unshift(generateCube())
         }
@@ -228,7 +228,7 @@ export class Game {
         }
       }
 
-      this.changeState()
+      this.changeState(selectedCubes.size)
       this.ctx.clearRect(44, 120, 400, 440)
       this.drawField()
       this.renderMap()
@@ -242,17 +242,16 @@ export class Game {
     const marginText = 25
     const circleWidth = 32
     const levelOffsetX = 99
-    const widthText = this.ctx.measureText(this.level)
 
-    const widthLevelBlock = widthText.width + circleWidth + marginText * 2
-    const centerTextX = levelOffsetX + (widthLevelBlock - widthText.width) / 2 + circleWidth / 2
+    defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
+
+    const widthLevelBlock = this.ctx.measureText(this.level).width + circleWidth + marginText * 2
 
     // block image
     this.ctx.drawImage(levelPic, levelOffsetX, 14, widthLevelBlock, 38)
 
     // text
-    defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
-    this.ctx.fillText(this.level, centerTextX, 22)
+    this.ctx.fillText(this.level, centerText(this.ctx, levelOffsetX, widthLevelBlock, this.level) + circleWidth / 2, 22)
 
     // circle
     this.ctx.beginPath()
@@ -266,14 +265,17 @@ export class Game {
     const progressHeading = 'Прогресс'
 
     // block
-    drawHalfRectWithRadius(this.ctx, 227, 0, 327, 62, 20)
+    const offsetXBlock = 227
+    const widthBlock = 327
+    drawHalfRectWithRadius(this.ctx, offsetXBlock, 0, widthBlock, 62, 20)
     this.ctx.fillStyle = '#0c2e5c'
     this.ctx.fill()
     this.ctx.closePath()
 
     // text
     defineText(this.ctx, '17px', 'Marvin', 'white', 'top')
-    this.ctx.fillText(progressHeading, 350, 5)
+    this.ctx.fillText(progressHeading, centerText(this.ctx, offsetXBlock, widthBlock, progressHeading), 5)
+
 
     // bg progress line
     drawRectWithRadius(this.ctx, 235, 27, this.maxProgress, 24, 15)
@@ -303,17 +305,16 @@ export class Game {
     const marginText = 25
     const circleWidth = 32
     const moneyOffsetX = 583
+
+    defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
     const widthText = this.ctx.measureText(this.money).width
     const widthMoneyBlock = widthText + circleWidth + marginText * 2
-
-    const centerTextX = moneyOffsetX + (widthMoneyBlock - widthText) / 2 + circleWidth / 2
 
     // block image
     this.ctx.drawImage(moneyPic, moneyOffsetX, 16, widthMoneyBlock, 38)
 
     // text
-    defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
-    this.ctx.fillText(this.money, centerTextX, 22)
+    this.ctx.fillText(this.money, centerText(this.ctx, moneyOffsetX, widthMoneyBlock, this.money) + circleWidth / 2, 22)
 
     // circle
     this.ctx.beginPath()
@@ -324,7 +325,6 @@ export class Game {
 
     // plus money btn
     const plusPic = this.imgs['plus-btn']
-
     this.ctx.drawImage(plusPic, moneyOffsetX + widthMoneyBlock + 5, 21, 30, 30)
   }
 
@@ -335,11 +335,13 @@ export class Game {
   }
 
   drawMovesAndScores() {
-    const offsetXTurns = 536
-    const offsetYTurns = 134
+    const offsetXBlock = 536
+    const offsetYBlock = 134
     const widthMovesBlock = 262
+    const heightMovesBlock = 246
 
-    drawRectWithRadius(this.ctx, offsetXTurns, offsetYTurns, widthMovesBlock, 246, 20)
+    // Rounded rectangle
+    drawRectWithRadius(this.ctx, offsetXBlock, offsetYBlock, widthMovesBlock, heightMovesBlock, 20)
     this.ctx.lineWidth = 7
     this.ctx.strokeStyle = '#00d2ef'
     this.ctx.fillStyle = '#00539e'
@@ -347,41 +349,40 @@ export class Game {
     this.ctx.fill()
     this.ctx.closePath()
 
-    const offsetXCircleMoves = offsetXTurns + 156 / 2.8
+    // Circle
+    const offsetXCircleMoves = (offsetXBlock + widthMovesBlock / 2) - 156 / 2
+    const radiusCircle = 156
 
     const movesPic = this.imgs['moves-round']
-
-    this.ctx.drawImage(movesPic, offsetXCircleMoves, offsetYTurns, 156, 156)
+    this.ctx.drawImage(movesPic, offsetXCircleMoves, offsetYBlock, radiusCircle, radiusCircle)
 
     // Text
-    const centerMovesX = offsetXCircleMoves + 156 / 2 - this.ctx.measureText(this.moves).width
-    const centerMovesY = offsetYTurns + 156 / 2.8
+    defineText(this.ctx, '44px', 'Marvin', 'white', 'middle')
 
-    defineText(this.ctx, '44px', 'Marvin', 'white', 'right')
-    if (this.moves >= 0) {
-      this.ctx.fillText(this.moves, centerMovesX, centerMovesY)
+    const centerYText = offsetYBlock + radiusCircle / 2
+
+    if (this.moves > 0) {
+      this.ctx.fillText(this.moves, centerText(this.ctx, offsetXCircleMoves, radiusCircle, this.moves), centerYText)
     } else {
-      this.ctx.fillText('0', centerMovesX, centerMovesY)
+      this.ctx.fillText('0', centerText(this.ctx, offsetXCircleMoves, radiusCircle, this.moves), centerYText)
     }
 
     // scores block
+    const offsetXInner = offsetXBlock + 26
     const widthScoresBlock = 212
-    drawRectWithRadius(this.ctx, offsetXTurns + 26, 285, widthScoresBlock, 86, 20)
+    const heightScoresBlock = 86
+
+    drawRectWithRadius(this.ctx, offsetXInner, 285, widthScoresBlock, heightScoresBlock, 20)
     this.ctx.fillStyle = '#011a3b'
     this.ctx.fill()
 
-    const innerText = `Очки:`
-    const centerInnerX =
-      offsetXTurns + 26 + widthScoresBlock / 2 - this.ctx.measureText(innerText).width / 4
-
+    const innerText = 'Очки:'
     defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
-    this.ctx.fillText(innerText, centerInnerX, 298)
-
-    const centerScoresX =
-      offsetXTurns + 26 + widthScoresBlock / 2 - this.ctx.measureText(this.scores).width / 2
+    this.ctx.fillText(innerText, centerText(this.ctx, offsetXInner, widthScoresBlock, innerText), 298)
 
     defineText(this.ctx, '28px', 'Marvin', 'white', 'top')
-    this.ctx.fillText(this.scores, centerScoresX, 328)
+
+    this.ctx.fillText(this.scores, centerText(this.ctx, offsetXInner, widthScoresBlock, this.scores), 328)
   }
 
   drawBonuses(numberCard, numMoney) {
@@ -392,7 +393,7 @@ export class Game {
     // Drawing an outer block
     const bonusCardPic = this.imgs['rounded-rectangle']
 
-    const offsetX = 412
+    const offsetX = 416
     const widthCard = 100
     const heightCard = 104
     const offsetXCard = offsetX + widthCard * numberCard
@@ -424,23 +425,23 @@ export class Game {
     defineText(this.ctx, '18px', 'Marvin', 'white', 'top')
     this.ctx.fillText(numMoney, centerTextX - 8, offsetYInner + 3)
   }
-  changeState() {
+  changeState(numberCubes) {
     // Change progress
-    // const increaseForOneMove = 30
-    // const percentScores = (this.neededScores * this.scores) / 100
-    // const increaseProgress = () => {
-    //   console.log(Math.floor((this.progress = (percentScores * this.maxProgress) / 100) / 30))
-    //   // return Math.floor((this.progress = percentScores * this.maxProgress / 100) / 30)
-    // }
-    // increaseProgress()
-    // while (this.moves >= 0) {
-    //   this.progress += increaseForOneMove
-    // }
-    // this.drawProgress()
+    const floor = (number, divisor) => Math.floor(number / divisor) * divisor;
+    const round = (number, divisor) => floor(number, divisor) + Math.round(number % divisor / divisor) * divisor
+
+    this.progress = round(this.maxProgress * this.scores / this.neededScores, 30)
+    if(this.scores >= this.neededScores) {
+      this.progress ===  this.maxProgress
+    }
+
+    this.drawProgress()
+
+
     // Change moves and scores
-    // this.moves--
-    // this.scores += this.selectedCubes.size
-    // this.drawMovesAndScores()
+    this.moves--
+    this.scores += numberCubes
+    this.drawMovesAndScores()
   }
 
   async initRender() {

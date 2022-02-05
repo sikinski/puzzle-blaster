@@ -39,6 +39,11 @@ export const defineText = (ctx, fz, font, color, baseline) => {
   ctx.fillStyle = `${color}`
   ctx.textBaseline = `${baseline}`
 }
+
+export const centerText = (ctx, offsetX, widthBlock, text) => {
+  return offsetX + widthBlock / 2 - ctx.measureText(text).width / 2
+}
+
 export const getMousePos = (canvas, e) => {
   const rect = canvas.getBoundingClientRect();
   return {
