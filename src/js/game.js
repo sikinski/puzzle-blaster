@@ -21,9 +21,13 @@ export class Game {
     this.progress = 0
     this.maxProgress = 307
     this.money = 300
-    this.moves = 30
+    this.moves = 25
     this.scores = 0
-    this.neededScores = 165
+    this.neededScores = 160
+
+    this.modalHeading = 'Пауза'
+    this.modalDesc = `Цель: ${this.neededScores} очков`
+    this.modalBtnText = 'Продолжить'
 
     this.colors = {
       red: 'red',
@@ -126,15 +130,14 @@ export class Game {
   getCubeByIndex(index) {
     return this.map[Math.floor(index / this.map.length)][index % this.map.length]
   }
+  generateCube() {
+    const colors = Object.keys(this.colors)
+    return colors[Math.floor(Math.random() * colors.length)]
+  }
 
   changeCubesOnClick() {
     this.canvas.addEventListener('click', async (e) => {
       if (this.moves <= 0) return
-
-      const generateCube = () => {
-        const colors = Object.keys(this.colors)
-        return colors[Math.floor(Math.random() * colors.length)]
-      }
 
       const pos = getMousePos(this.canvas, e)
 
@@ -219,7 +222,7 @@ export class Game {
           }
         }
         while (col.length < this.map.length) {
-          col.unshift(generateCube())
+          col.unshift(this.generateCube())
         }
         cols.push(col)
       }
@@ -234,9 +237,10 @@ export class Game {
       this.ctx.clearRect(44, 120, 400, 440)
       this.drawField()
       this.renderMap()
+
+      this.endGame()
     })
   }
-  в
 
   drawLevelBlock() {
     const levelPic = this.imgs['level-block']
@@ -293,7 +297,7 @@ export class Game {
     this.ctx.closePath()
 
     // actual progress line
-    if (this.progress <= this.maxProgress) {
+    if (this.progress < this.maxProgress) {
       drawRectWithRadius(this.ctx, 235, 27, this.progress, 24, 15)
       if (this.progress > 30) {
         this.ctx.fillStyle = '#7ae400'
@@ -345,6 +349,164 @@ export class Game {
     const pausePic = this.imgs['pause-btn']
 
     this.ctx.drawImage(pausePic, 776, 5, 67, 67)
+  }
+  pauseBtn() {
+    this.canvas.addEventListener('click', async (e) => {
+      const pos = getMousePos(this.canvas, e)
+
+      if (pos.x > 776 && pos.x < 843 && pos.y > 5 && pos.y < 72) {
+        this.drawModal()
+      }
+    })
+  }
+
+  drawModal() {
+    const widthModal = 400
+    const heightModal = 450
+    const offsetXBlock = this.canvas.width / 2 - widthModal / 2
+    const offsetYBlock = this.canvas.height / 2 - heightModal / 2
+    console.log(this.modalBtnText)
+    console.log(this.modalHeading)
+
+    drawRectWithRadius(this.ctx, offsetXBlock, offsetYBlock, widthModal, heightModal, 20)
+    this.ctx.lineWidth = 7
+    this.ctx.strokeStyle = '#00539e'
+    this.ctx.fillStyle = '#011a3b'
+    this.ctx.stroke()
+    this.ctx.fill()
+    this.ctx.closePath()
+
+    // heading
+    if (this.modalHeading === 'Пауза') {
+      defineText(this.ctx, '44px', 'Marvin', '#00539e', 'middle')
+    } else if (this.modalHeading === 'Победа!') {
+      defineText(this.ctx, '44px', 'Marvin', '#7ae400', 'middle')
+    } else if (this.modalHeading === 'Поражение') {
+      defineText(this.ctx, '44px', 'Marvin', '#a70916', 'middle')
+    }
+    this.ctx.fillText(
+      this.modalHeading,
+      centerText(this.ctx, offsetXBlock, widthModal, this.modalHeading),
+      offsetYBlock + 50
+    )
+
+    // level
+    defineText(this.ctx, '34px', 'Marvin', 'white', 'middle')
+    this.ctx.fillText(
+      `Уровень: ${this.level}`,
+      centerText(this.ctx, offsetXBlock, widthModal, `Уровень: ${this.level}`),
+      offsetYBlock + 150
+    )
+
+    // scores
+    defineText(this.ctx, '24px', 'Marvin', '#a903b6', 'middle')
+    this.ctx.fillText(
+      this.modalDesc,
+      centerText(this.ctx, offsetXBlock, widthModal, this.modalDesc),
+      offsetYBlock + 200
+    )
+
+    // button
+    const offsetXButton = offsetXBlock + 30
+    const offsetYButton = offsetYBlock + 350
+    const widthButton = widthModal - 60
+    const heightButton = 80
+
+    drawRectWithRadius(this.ctx, offsetXButton, offsetYButton, widthButton, heightButton, 20)
+    this.ctx.fillStyle = '#00539e'
+    this.ctx.fill()
+    this.ctx.closePath()
+
+    defineText(this.ctx, '24px', 'Marvin', 'white', 'middle')
+    this.ctx.fillText(
+      this.modalBtnText,
+      centerText(this.ctx, offsetXButton, widthButton, this.modalBtnText),
+      offsetYButton + heightButton / 2
+    )
+
+    this.canvas.addEventListener('click', async (e) => {
+      const pos = getMousePos(this.canvas, e)
+
+      if (
+        pos.x > offsetXButton &&
+        pos.x < offsetXButton + widthButton &&
+        pos.y > offsetYButton &&
+        pos.y < offsetYButton + heightButton
+      ) {
+        if (this.modalBtnText === 'Продолжить') {
+          this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
+          this.ctx.clearRect(460, 444, 256, 120)
+
+          this.drawField()
+          this.renderMap()
+          this.drawMovesAndScores()
+          this.drawBonuses(1, '5')
+          this.drawBonuses(2, '3')
+        } else if (this.modalBtnText === 'Заново') {
+          this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
+          this.ctx.clearRect(460, 444, 256, 120)
+          // state
+          const red = this.colors.red
+          const green = this.colors.green
+          const yellow = this.colors.yellow
+          const blue = this.colors.blue
+          const purple = this.colors.purple
+
+          this.map = [
+            [red, yellow, green, green, yellow, yellow, red, red, red],
+            [red, yellow, green, green, purple, yellow, blue, blue, red],
+            [blue, blue, green, green, yellow, yellow, red, red, red],
+            [blue, blue, blue, green, yellow, yellow, red, red, red],
+            [blue, blue, green, green, purple, yellow, red, red, red],
+            [red, green, green, green, purple, red, red, red, red],
+            [red, purple, purple, purple, blue, purple, purple, purple, purple],
+            [red, green, yellow, green, purple, yellow, red, red, red],
+            [red, green, yellow, green, purple, yellow, red, red, red],
+          ]
+          this.moves = 30
+          this.scores = 0
+          this.progress = 0
+
+          // 'closing' modal
+          this.drawProgress()
+          this.drawMoneyBlock()
+          this.drawField()
+          this.renderMap()
+          this.drawMovesAndScores()
+          this.drawBonuses(1, '5')
+          this.drawBonuses(2, '3')
+        } else if (this.modalBtnText === 'Дальше') {
+          // state
+          this.map = []
+          while (this.map.length < 9) {
+            this.map.push([])
+          }
+
+          for (let i = 0; i < this.map.length; i++) {
+            while (this.map[i].length < 9) {
+              this.map[i].push(this.generateCube())
+            }
+          }
+          this.level++
+          this.moves = 30
+          this.scores = 0
+          this.progress = 0
+
+          // 'closing' modal
+          this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
+          this.ctx.clearRect(460, 444, 256, 120)
+
+          this.drawLevelBlock()
+          this.drawProgress()
+          this.drawMoneyBlock()
+          this.drawField()
+          this.renderMap()
+          this.drawMovesAndScores()
+          this.drawBonuses(1, '5')
+          this.drawBonuses(2, '3')
+        }
+      }
+    })
   }
 
   drawMovesAndScores() {
@@ -437,12 +599,10 @@ export class Game {
     this.ctx.closePath()
 
     // Text creating
-    this.ctx.font = '20px Marvin'
-    // let bonusMoney = numMoney
+    defineText(this.ctx, '18px', 'Marvin', 'white', 'top')
 
     const centerTextX = offsetXCard + 16 + (widthInner - this.ctx.measureText(numMoney).width) / 2
 
-    defineText(this.ctx, '18px', 'Marvin', 'white', 'top')
     this.ctx.fillText(numMoney, centerTextX - 8, offsetYInner + 3)
   }
   changeState(numberCubes) {
@@ -453,7 +613,7 @@ export class Game {
 
     this.progress = round((this.maxProgress * this.scores) / this.neededScores, 30)
     if (this.scores >= this.neededScores) {
-      this.progress === this.maxProgress
+      this.progress = this.maxProgress
     }
 
     this.drawProgress()
@@ -462,6 +622,19 @@ export class Game {
     this.moves--
     this.scores += numberCubes
     this.drawMovesAndScores()
+  }
+  endGame() {
+    if (this.scores >= this.neededScores) {
+      this.modalHeading = 'Победа!'
+      this.modalDesc = `Набрано: ${this.scores} + ${this.moves} очков`
+      this.modalBtnText = 'Дальше'
+      this.drawModal()
+    } else if (this.moves <= 0 && this.scores < this.neededScores) {
+      this.modalHeading = 'Поражение'
+      this.modalDesc = `Не хватило ${this.neededScores - this.scores} очков`
+      this.modalBtnText = 'Заново'
+      this.drawModal()
+    }
   }
 
   async initRender() {
@@ -474,6 +647,7 @@ export class Game {
     this.drawProgress()
     this.drawMoneyBlock()
     this.drawPauseBtn()
+    this.pauseBtn()
     this.drawMovesAndScores()
     this.drawBonuses(1, '5')
     this.drawBonuses(2, '3')
