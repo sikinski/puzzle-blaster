@@ -28,6 +28,7 @@ export class Game {
     this.modalHeading = 'Пауза'
     this.modalDesc = `Цель: ${this.neededScores} очков`
     this.modalBtnText = 'Продолжить'
+    this.modalOpen = false
 
     this.colors = {
       red: 'red',
@@ -365,8 +366,6 @@ export class Game {
     const heightModal = 450
     const offsetXBlock = this.canvas.width / 2 - widthModal / 2
     const offsetYBlock = this.canvas.height / 2 - heightModal / 2
-    console.log(this.modalBtnText)
-    console.log(this.modalHeading)
 
     drawRectWithRadius(this.ctx, offsetXBlock, offsetYBlock, widthModal, heightModal, 20)
     this.ctx.lineWidth = 7
@@ -442,6 +441,7 @@ export class Game {
           this.drawMovesAndScores()
           this.drawBonuses(1, '5')
           this.drawBonuses(2, '3')
+          this.modalOpen = false
         } else if (this.modalBtnText === 'Заново') {
           this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
           this.ctx.clearRect(460, 444, 256, 120)
@@ -463,9 +463,14 @@ export class Game {
             [red, green, yellow, green, purple, yellow, red, red, red],
             [red, green, yellow, green, purple, yellow, red, red, red],
           ]
-          this.moves = 30
+          this.moves = 25
           this.scores = 0
           this.progress = 0
+          this.money -= 5
+
+          this.modalHeading = 'Пауза'
+          this.modalDesc = `Цель: ${this.neededScores} очков`
+          this.modalBtnText = 'Продолжить'
 
           // 'closing' modal
           this.drawProgress()
@@ -475,6 +480,7 @@ export class Game {
           this.drawMovesAndScores()
           this.drawBonuses(1, '5')
           this.drawBonuses(2, '3')
+          this.modalOpen = false
         } else if (this.modalBtnText === 'Дальше') {
           // state
           this.map = []
@@ -487,10 +493,20 @@ export class Game {
               this.map[i].push(this.generateCube())
             }
           }
+          if(this.neededScores * 1.2 < this.scores) {
+            this.money += 5
+          } else if(this.neededScores * 1.5 < this.scores) {
+            this.money += 10
+          } else if(this.neededScores * 3 < this.scores) {
+            this.money += 20
+          }
           this.level++
           this.moves = 30
           this.scores = 0
           this.progress = 0
+          this.modalHeading = 'Пауза'
+          this.modalDesc = `Цель: ${this.neededScores} очков`
+          this.modalBtnText = 'Продолжить'
 
           // 'closing' modal
           this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
@@ -504,6 +520,7 @@ export class Game {
           this.drawMovesAndScores()
           this.drawBonuses(1, '5')
           this.drawBonuses(2, '3')
+          this.modalOpen = false
         }
       }
     })
@@ -628,11 +645,13 @@ export class Game {
       this.modalHeading = 'Победа!'
       this.modalDesc = `Набрано: ${this.scores} + ${this.moves} очков`
       this.modalBtnText = 'Дальше'
+      this.modalOpen = true
       this.drawModal()
     } else if (this.moves <= 0 && this.scores < this.neededScores) {
       this.modalHeading = 'Поражение'
       this.modalDesc = `Не хватило ${this.neededScores - this.scores} очков`
       this.modalBtnText = 'Заново'
+      this.modalOpen = true
       this.drawModal()
     }
   }
