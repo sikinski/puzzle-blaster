@@ -129,6 +129,8 @@ export class Game {
 
   changeCubesOnClick() {
     this.canvas.addEventListener('click', async (e) => {
+      if (this.moves <= 0) return
+
       const generateCube = () => {
         const colors = Object.keys(this.colors)
         return colors[Math.floor(Math.random() * colors.length)]
@@ -251,7 +253,11 @@ export class Game {
     this.ctx.drawImage(levelPic, levelOffsetX, 14, widthLevelBlock, 38)
 
     // text
-    this.ctx.fillText(this.level, centerText(this.ctx, levelOffsetX, widthLevelBlock, this.level) + circleWidth / 2, 22)
+    this.ctx.fillText(
+      this.level,
+      centerText(this.ctx, levelOffsetX, widthLevelBlock, this.level) + circleWidth / 2,
+      22
+    )
 
     // circle
     this.ctx.beginPath()
@@ -274,8 +280,11 @@ export class Game {
 
     // text
     defineText(this.ctx, '17px', 'Marvin', 'white', 'top')
-    this.ctx.fillText(progressHeading, centerText(this.ctx, offsetXBlock, widthBlock, progressHeading), 5)
-
+    this.ctx.fillText(
+      progressHeading,
+      centerText(this.ctx, offsetXBlock, widthBlock, progressHeading),
+      5
+    )
 
     // bg progress line
     drawRectWithRadius(this.ctx, 235, 27, this.maxProgress, 24, 15)
@@ -314,7 +323,11 @@ export class Game {
     this.ctx.drawImage(moneyPic, moneyOffsetX, 16, widthMoneyBlock, 38)
 
     // text
-    this.ctx.fillText(this.money, centerText(this.ctx, moneyOffsetX, widthMoneyBlock, this.money) + circleWidth / 2, 22)
+    this.ctx.fillText(
+      this.money,
+      centerText(this.ctx, moneyOffsetX, widthMoneyBlock, this.money) + circleWidth / 2,
+      22
+    )
 
     // circle
     this.ctx.beginPath()
@@ -350,7 +363,7 @@ export class Game {
     this.ctx.closePath()
 
     // Circle
-    const offsetXCircleMoves = (offsetXBlock + widthMovesBlock / 2) - 156 / 2
+    const offsetXCircleMoves = offsetXBlock + widthMovesBlock / 2 - 156 / 2
     const radiusCircle = 156
 
     const movesPic = this.imgs['moves-round']
@@ -361,11 +374,11 @@ export class Game {
 
     const centerYText = offsetYBlock + radiusCircle / 2
 
-    if (this.moves > 0) {
-      this.ctx.fillText(this.moves, centerText(this.ctx, offsetXCircleMoves, radiusCircle, this.moves), centerYText)
-    } else {
-      this.ctx.fillText('0', centerText(this.ctx, offsetXCircleMoves, radiusCircle, this.moves), centerYText)
-    }
+    this.ctx.fillText(
+      this.moves,
+      centerText(this.ctx, offsetXCircleMoves, radiusCircle, this.moves),
+      centerYText
+    )
 
     // scores block
     const offsetXInner = offsetXBlock + 26
@@ -378,11 +391,18 @@ export class Game {
 
     const innerText = 'Очки:'
     defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
-    this.ctx.fillText(innerText, centerText(this.ctx, offsetXInner, widthScoresBlock, innerText), 298)
+    this.ctx.fillText(
+      innerText,
+      centerText(this.ctx, offsetXInner, widthScoresBlock, innerText),
+      298
+    )
 
     defineText(this.ctx, '28px', 'Marvin', 'white', 'top')
-
-    this.ctx.fillText(this.scores, centerText(this.ctx, offsetXInner, widthScoresBlock, this.scores), 328)
+    this.ctx.fillText(
+      this.scores,
+      centerText(this.ctx, offsetXInner, widthScoresBlock, this.scores),
+      328
+    )
   }
 
   drawBonuses(numberCard, numMoney) {
@@ -427,16 +447,16 @@ export class Game {
   }
   changeState(numberCubes) {
     // Change progress
-    const floor = (number, divisor) => Math.floor(number / divisor) * divisor;
-    const round = (number, divisor) => floor(number, divisor) + Math.round(number % divisor / divisor) * divisor
+    const floor = (number, divisor) => Math.floor(number / divisor) * divisor
+    const round = (number, divisor) =>
+      floor(number, divisor) + Math.round((number % divisor) / divisor) * divisor
 
-    this.progress = round(this.maxProgress * this.scores / this.neededScores, 30)
-    if(this.scores >= this.neededScores) {
-      this.progress ===  this.maxProgress
+    this.progress = round((this.maxProgress * this.scores) / this.neededScores, 30)
+    if (this.scores >= this.neededScores) {
+      this.progress === this.maxProgress
     }
 
     this.drawProgress()
-
 
     // Change moves and scores
     this.moves--
