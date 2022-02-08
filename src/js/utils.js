@@ -43,11 +43,32 @@ export const defineText = (ctx, fz, font, color, baseline) => {
 export const centerText = (ctx, offsetX, widthBlock, text) => {
   return offsetX + widthBlock / 2 - ctx.measureText(text).width / 2
 }
+export const animate = (animationTime, frameCallback, timingFunction) =>
+  new Promise((resolve) => {
+    let startTime = null;
+
+    requestAnimationFrame(async function frameHandler(currentTime) {
+      if (!startTime) {
+        startTime = currentTime;
+      }
+
+      const timeDelta = currentTime - startTime;
+      const progress = Math.min(timeDelta / animationTime, 1);
+      const animationProgress = timingFunction(progress);
+
+      await frameCallback(animationProgress);
+
+      if (progress === 1) return resolve();
+
+      requestAnimationFrame(frameHandler);
+    });
+  });
+
 
 export const getMousePos = (canvas, e) => {
-  const rect = canvas.getBoundingClientRect();
+  const rect = canvas.getBoundingClientRect()
   return {
     x: e.clientX - rect.left,
-    y: e.clientY - rect.top
+    y: e.clientY - rect.top,
   }
 }

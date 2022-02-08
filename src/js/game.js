@@ -5,6 +5,7 @@ import {
   defineText,
   centerText,
   getMousePos,
+  animate,
 } from './utils.js'
 
 export class Game {
@@ -21,7 +22,7 @@ export class Game {
     this.progress = 0
     this.maxProgress = 307
     this.money = 300
-    this.moves = 25
+    this.moves = 35
     this.scores = 0
     this.neededScores = 160
 
@@ -205,13 +206,38 @@ export class Game {
       }
 
       if (selectedCubes.size < 3) return
-      for (let cube of selectedCubes) {
+
+      await animate(
+        250,
+        (a) => a,
+        (animationProgress) => {
+          selectedCubes.forEach((cube) => {
+            const alpha = 1 - animationProgress            
+            const widthCube = 42
+            const heightCube = 46
+            const cubeImg =
+              this.cubeImages[this.map[Math.floor(cube / this.map.length)][cube % this.map.length]]
+    
+            const offsetXCube = 44 + widthCube * Math.floor(cube % this.map.length)
+            const offsetYCube = 120 + heightCube * Math.floor(cube / this.map.length)
+
+            this.ctx.globalAlpha = 1
+            this.ctx.fillStyle = '#020526'
+            this.ctx.fillRect(offsetXCube, offsetYCube, widthCube, heightCube)
+            this.ctx.globalAlpha = alpha
+            this.ctx.drawImage(cubeImg,offsetXCube, offsetYCube, widthCube, heightCube)
+          })
+        }
+      );
+      this.ctx.globalAlpha = 1
+
+      selectedCubes.forEach((cube) => {
         this.map[Math.floor(cube / this.map.length)][cube % this.map.length] = null
-      }
+      })
       this.ctx.clearRect(44, 120, 400, 440)
       this.drawField()
       this.renderMap()
-
+    
       // Falling
       let cols = []
 
@@ -463,7 +489,7 @@ export class Game {
             [red, green, yellow, green, purple, yellow, red, red, red],
             [red, green, yellow, green, purple, yellow, red, red, red],
           ]
-          this.moves = 25
+          this.moves = 35
           this.scores = 0
           this.progress = 0
           this.money -= 5
@@ -493,15 +519,15 @@ export class Game {
               this.map[i].push(this.generateCube())
             }
           }
-          if(this.neededScores * 1.2 < this.scores) {
+          if (this.neededScores * 1.2 < this.scores) {
             this.money += 5
-          } else if(this.neededScores * 1.5 < this.scores) {
+          } else if (this.neededScores * 1.5 < this.scores) {
             this.money += 10
-          } else if(this.neededScores * 3 < this.scores) {
+          } else if (this.neededScores * 3 < this.scores) {
             this.money += 20
           }
           this.level++
-          this.moves = 30
+          this.moves = 35
           this.scores = 0
           this.progress = 0
           this.modalHeading = 'Пауза'
