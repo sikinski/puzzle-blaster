@@ -22,9 +22,9 @@ export class Game {
     this.progress = 0
     this.maxProgress = 307
     this.money = 300
-    this.moves = 35
+    this.moves = 190
     this.scores = 0
-    this.neededScores = 160
+    this.neededScores = 960
 
     this.modalHeading = 'Пауза'
     this.modalDesc = `Цель: ${this.neededScores} очков`
@@ -143,81 +143,87 @@ export class Game {
 
       const pos = getMousePos(this.canvas, e)
 
-      const cubeIndex = this.coords.findIndex(
+      const clickedCubeIdx = this.coords.findIndex(
         ([x1, x2, y1, y2]) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
       )
 
-      if (cubeIndex === -1) return
+      if (clickedCubeIdx === -1) return
 
-      const row = Math.floor(cubeIndex / this.map.length)
-      const col = cubeIndex % this.map.length
-
-      // Algorithm to find all the same cubes on click
+      const row = Math.floor(clickedCubeIdx / this.map.length)
+      const col = clickedCubeIdx % this.map.length
       const clickedColor = this.map[row][col]
 
-      let processed = []
-      let selectedCubes = new Set()
-      processed.push(cubeIndex)
+      // Algorithm to find all the same cubes on click
+      const findTheSame = (cubeIndex, colorCube) => {
+        let processed = []
+        let selectedCubes = new Set()
+        processed.push(cubeIndex)
 
-      while (processed.length) {
-        const current = processed.shift()
+        while (processed.length) {
+          const current = processed.shift()
 
-        selectedCubes.add(current)
+          selectedCubes.add(current)
 
-        const leftCube = current - 1
-        const rightCube = current + 1
-        const topCube = current - 9
-        const bottomCube = current + 9
+          const leftCube = current - 1
+          const rightCube = current + 1
+          const topCube = current - 9
+          const bottomCube = current + 9
 
-        // to left
-        if (
-          (leftCube + 1) % 9 &&
-          leftCube >= 0 &&
-          this.getCubeByIndex(leftCube) === clickedColor &&
-          !selectedCubes.has(leftCube)
-        ) {
-          processed.push(leftCube)
+          // to left
+          if (
+            (leftCube + 1) % 9 &&
+            leftCube >= 0 &&
+            this.getCubeByIndex(leftCube) === colorCube &&
+            !selectedCubes.has(leftCube)
+          ) {
+            processed.push(leftCube)
+          }
+          // to top
+          if (
+            topCube > 0 &&
+            this.getCubeByIndex(topCube) === colorCube &&
+            !selectedCubes.has(topCube)
+          ) {
+            processed.push(topCube)
+          }
+          // to right
+          if (
+            !(rightCube % 9 === 0) &&
+            rightCube < 81 &&
+            this.getCubeByIndex(rightCube) === colorCube &&
+            !selectedCubes.has(rightCube)
+          ) {
+            processed.push(rightCube)
+          }
+          // to bottom
+          if (
+            bottomCube < 81 &&
+            this.getCubeByIndex(bottomCube) === colorCube &&
+            !selectedCubes.has(bottomCube)
+          ) {
+            processed.push(bottomCube)
+          }
         }
-        // to top
-        if (
-          topCube > 0 &&
-          this.getCubeByIndex(topCube) === clickedColor &&
-          !selectedCubes.has(topCube)
-        ) {
-          processed.push(topCube)
-        }
-        // to right
-        if (
-          !(rightCube % 9 === 0) &&
-          rightCube < 81 &&
-          this.getCubeByIndex(rightCube) === clickedColor &&
-          !selectedCubes.has(rightCube)
-        ) {
-          processed.push(rightCube)
-        }
-        // to bottom
-        if (
-          bottomCube < 81 &&
-          this.getCubeByIndex(bottomCube) === clickedColor &&
-          !selectedCubes.has(bottomCube)
-        ) {
-          processed.push(bottomCube)
-        }
+
+        return selectedCubes
       }
 
-      if (selectedCubes.size < 3) return
+      const selectedCubesSet = findTheSame(clickedCubeIdx, clickedColor)
+
+      // Fade out animation
+      if (selectedCubesSet.size < 3) return
 
       await animate(
         250,
         (a) => a,
         (animationProgress) => {
-          selectedCubes.forEach((cube) => {
-            const alpha = 1 - animationProgress            
+          selectedCubesSet.forEach((cube) => {
+            const alpha = 1 - animationProgress
             const widthCube = 42
             const heightCube = 46
             const cubeImg =
               this.cubeImages[this.map[Math.floor(cube / this.map.length)][cube % this.map.length]]
-    
+
             const offsetXCube = 44 + widthCube * Math.floor(cube % this.map.length)
             const offsetYCube = 120 + heightCube * Math.floor(cube / this.map.length)
 
@@ -225,19 +231,20 @@ export class Game {
             this.ctx.fillStyle = '#020526'
             this.ctx.fillRect(offsetXCube, offsetYCube, widthCube, heightCube)
             this.ctx.globalAlpha = alpha
-            this.ctx.drawImage(cubeImg,offsetXCube, offsetYCube, widthCube, heightCube)
+            this.ctx.drawImage(cubeImg, offsetXCube, offsetYCube, widthCube, heightCube)
           })
         }
-      );
+      )
       this.ctx.globalAlpha = 1
 
-      selectedCubes.forEach((cube) => {
+      // delete selected cubes
+      selectedCubesSet.forEach((cube) => {
         this.map[Math.floor(cube / this.map.length)][cube % this.map.length] = null
       })
       this.ctx.clearRect(44, 120, 400, 440)
       this.drawField()
       this.renderMap()
-    
+
       // Falling
       let cols = []
 
@@ -260,15 +267,48 @@ export class Game {
         }
       }
 
-      this.changeState(selectedCubes.size)
+      this.changeState(selectedCubesSet.size)
       this.ctx.clearRect(44, 120, 400, 440)
       this.drawField()
       this.renderMap()
 
-      this.endGame()
+      this.endGame() // checkNear is in
     })
   }
+  checkNear() {
+    // check the same cubes nearly
+    let nearlies = []
 
+    for (let i = 0; i < this.map.length; i++) {
+      for (let j = 0; j < this.map[i].length; j++) {
+        const cubeIndex = j + i * 9
+        const colorCube = this.map[i][j]
+        const nearlyCubesSet = findTheSame(cubeIndex, colorCube)
+
+        if (nearlyCubesSet.size >= 3) {
+          nearlies.push('0')
+        }
+      }
+    }
+
+    if (nearlies.length === 0) {
+      console.log('Ходов нет!')
+      // render text
+      const text = 'Ходов нет!'
+      defineText(this.ctx, '45px', 'Marvin', '#a70916', 'middle')
+
+      this.ctx.fillText(
+        text,
+        centerText(this.ctx, 0, this.canvas.width, text),
+        this.canvas.height / 2
+      )
+
+      // here is this.mixingField()
+    }
+    nearlies = []
+  }
+  // mixingField() {
+  // }
   drawLevelBlock() {
     const levelPic = this.imgs['level-block']
 
@@ -679,6 +719,8 @@ export class Game {
       this.modalBtnText = 'Заново'
       this.modalOpen = true
       this.drawModal()
+    } else {
+      this.checkNear()
     }
   }
 
