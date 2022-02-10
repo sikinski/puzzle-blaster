@@ -21,11 +21,11 @@ export class Game {
     this.level = 1
     this.progress = 0
     this.maxProgress = 307
-    this.money = 300
-    this.moves = 190
+    this.money = 30
+    this.moves = 309
     this.scores = 0
-    this.neededScores = 960
-    this.shuffleNum = 3
+    this.neededScores = 1609
+    this.shufflesNum = 3
 
     this.modalHeading = 'Пауза'
     this.modalDesc = `Цель: ${this.neededScores} очков`
@@ -298,7 +298,11 @@ export class Game {
     }
     if (nearlies.length === 0) {
       await this.ifNoWays()
-      await this.shuffle()
+      if(this.shufflesNum > 0) {
+        await this.shuffle()
+      } else {
+        this.endGame(this.shufflesNum)
+      }
     }
     nearlies = []
   }
@@ -340,7 +344,7 @@ export class Game {
     this.drawMovesAndScores()
   }
   async shuffle() {
-    const widthCube = 42
+    const widthCube = 42 
     const heightCube = 46
 
     const shuffleArray = (array) => {
@@ -390,7 +394,7 @@ export class Game {
       this.modalProccessed = false
     }
     await shuffleAsync()
-    this.shuffleNum--
+    this.shufflesNum--
   }
   drawLevelBlock() {
     const levelPic = this.imgs['level-block']
@@ -789,20 +793,21 @@ export class Game {
     this.scores += numberCubes
     this.drawMovesAndScores()
   }
-  async endGame() {
+  async endGame(shufflesNum) {
     if (this.scores >= this.neededScores) {
       this.modalHeading = 'Победа!'
       this.modalDesc = `Набрано: ${this.scores} + ${this.moves} очков`
       this.modalBtnText = 'Дальше'
       this.modalOpen = true
       this.drawModal()
-    } else if (this.moves <= 0 && this.scores < this.neededScores) {
+    } else if (this.moves <= 0 && this.scores < this.neededScores || shufflesNum <= 0) {
       this.modalHeading = 'Поражение'
       this.modalDesc = `Не хватило ${this.neededScores - this.scores} очков`
       this.modalBtnText = 'Заново'
       this.modalOpen = true
       this.drawModal()
-    } else {
+    }
+    else {
       await this.checkNear()
     }
   }
