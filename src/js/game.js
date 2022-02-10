@@ -25,11 +25,13 @@ export class Game {
     this.moves = 190
     this.scores = 0
     this.neededScores = 960
+    this.shuffleNum = 3
 
     this.modalHeading = 'Пауза'
     this.modalDesc = `Цель: ${this.neededScores} очков`
     this.modalBtnText = 'Продолжить'
     this.modalOpen = false
+    this.modalProccessed = false
 
     this.colors = {
       red: 'red',
@@ -125,8 +127,6 @@ export class Game {
     this.ctx.fillStyle = '#020526'
     this.ctx.fill()
     this.ctx.stroke()
-
-    this.renderMap()
   }
 
   getCubeByIndex(index) {
@@ -136,146 +136,148 @@ export class Game {
     const colors = Object.keys(this.colors)
     return colors[Math.floor(Math.random() * colors.length)]
   }
+  findTheSame = (getCube, cubeIndex, colorCube) => {
+    let processed = []
+    let selectedCubes = new Set()
+    processed.push(cubeIndex)
+
+    while (processed.length) {
+      const current = processed.shift()
+
+      selectedCubes.add(current)
+
+      const leftCube = current - 1
+      const rightCube = current + 1
+      const topCube = current - 9
+      const bottomCube = current + 9
+
+      // to left
+      if (
+        (leftCube + 1) % 9 &&
+        leftCube >= 0 &&
+        getCube(leftCube) === colorCube &&
+        !selectedCubes.has(leftCube)
+      ) {
+        processed.push(leftCube)
+      }
+      // to top
+      if (topCube > 0 && getCube(topCube) === colorCube && !selectedCubes.has(topCube)) {
+        processed.push(topCube)
+      }
+      // to right
+      if (
+        !(rightCube % 9 === 0) &&
+        rightCube < 81 &&
+        getCube(rightCube) === colorCube &&
+        !selectedCubes.has(rightCube)
+      ) {
+        processed.push(rightCube)
+      }
+      // to bottom
+      if (bottomCube < 81 && getCube(bottomCube) === colorCube && !selectedCubes.has(bottomCube)) {
+        processed.push(bottomCube)
+      }
+    }
+    return selectedCubes
+  }
 
   changeCubesOnClick() {
     this.canvas.addEventListener('click', async (e) => {
-      if (this.moves <= 0) return
+      let isProccessed = false
+      if (!isProccessed && !this.modalProccessed) {
+        isProccessed = true
+        if (this.moves <= 0) return
 
-      const pos = getMousePos(this.canvas, e)
+        const pos = getMousePos(this.canvas, e)
 
-      const clickedCubeIdx = this.coords.findIndex(
-        ([x1, x2, y1, y2]) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
-      )
+        const clickedCubeIdx = this.coords.findIndex(
+          ([x1, x2, y1, y2]) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
+        )
 
-      if (clickedCubeIdx === -1) return
+        if (clickedCubeIdx === -1) return
 
-      const row = Math.floor(clickedCubeIdx / this.map.length)
-      const col = clickedCubeIdx % this.map.length
-      const clickedColor = this.map[row][col]
+        const row = Math.floor(clickedCubeIdx / this.map.length)
+        const col = clickedCubeIdx % this.map.length
+        const clickedColor = this.map[row][col]
 
-      // Algorithm to find all the same cubes on click
-      const findTheSame = (cubeIndex, colorCube) => {
-        let processed = []
-        let selectedCubes = new Set()
-        processed.push(cubeIndex)
+        // Algorithm to find all the same cubes on click
 
-        while (processed.length) {
-          const current = processed.shift()
+        const selectedCubesSet = this.findTheSame(
+          this.getCubeByIndex.bind(this),
+          clickedCubeIdx,
+          clickedColor
+        )
 
-          selectedCubes.add(current)
+        // Fade out animation
+        if (selectedCubesSet.size < 3) return
 
-          const leftCube = current - 1
-          const rightCube = current + 1
-          const topCube = current - 9
-          const bottomCube = current + 9
+        await animate(
+          250,
+          (a) => a,
+          (animationProgress) => {
+            selectedCubesSet.forEach((cube) => {
+              const alpha = 1 - animationProgress
+              const widthCube = 42
+              const heightCube = 46
+              const cubeImg =
+                this.cubeImages[
+                  this.map[Math.floor(cube / this.map.length)][cube % this.map.length]
+                ]
 
-          // to left
-          if (
-            (leftCube + 1) % 9 &&
-            leftCube >= 0 &&
-            this.getCubeByIndex(leftCube) === colorCube &&
-            !selectedCubes.has(leftCube)
-          ) {
-            processed.push(leftCube)
+              const offsetXCube = 44 + widthCube * Math.floor(cube % this.map.length)
+              const offsetYCube = 120 + heightCube * Math.floor(cube / this.map.length)
+
+              this.ctx.globalAlpha = 1
+              this.ctx.fillStyle = '#020526'
+              this.ctx.fillRect(offsetXCube, offsetYCube, widthCube, heightCube)
+              this.ctx.globalAlpha = alpha
+              this.ctx.drawImage(cubeImg, offsetXCube, offsetYCube, widthCube, heightCube)
+            })
           }
-          // to top
-          if (
-            topCube > 0 &&
-            this.getCubeByIndex(topCube) === colorCube &&
-            !selectedCubes.has(topCube)
-          ) {
-            processed.push(topCube)
+        )
+        this.ctx.globalAlpha = 1
+
+        // delete selected cubes
+        selectedCubesSet.forEach((cube) => {
+          this.map[Math.floor(cube / this.map.length)][cube % this.map.length] = null
+        })
+        this.ctx.clearRect(44, 120, 400, 440)
+        this.drawField()
+        this.renderMap()
+
+        // Falling
+        let cols = []
+
+        for (let i = 0; i < this.map.length; i++) {
+          let col = []
+          for (let j = 0; j < this.map[i].length; j++) {
+            if (this.map[j][i] !== null) {
+              col.push(this.map[j][i])
+            }
           }
-          // to right
-          if (
-            !(rightCube % 9 === 0) &&
-            rightCube < 81 &&
-            this.getCubeByIndex(rightCube) === colorCube &&
-            !selectedCubes.has(rightCube)
-          ) {
-            processed.push(rightCube)
+          while (col.length < this.map.length) {
+            col.unshift(this.generateCube())
           }
-          // to bottom
-          if (
-            bottomCube < 81 &&
-            this.getCubeByIndex(bottomCube) === colorCube &&
-            !selectedCubes.has(bottomCube)
-          ) {
-            processed.push(bottomCube)
+          cols.push(col)
+        }
+
+        for (let i = 0; i < this.map.length; i++) {
+          for (let j = this.map[i].length - 1; j >= 0; j--) {
+            this.map[j][i] = cols[i][j]
           }
         }
 
-        return selectedCubes
+        this.changeState(selectedCubesSet.size)
+        this.ctx.clearRect(44, 120, 400, 440)
+        this.drawField()
+        this.renderMap()
+
+        isProccessed = false
+        await this.endGame()
       }
-
-      const selectedCubesSet = findTheSame(clickedCubeIdx, clickedColor)
-
-      // Fade out animation
-      if (selectedCubesSet.size < 3) return
-
-      await animate(
-        250,
-        (a) => a,
-        (animationProgress) => {
-          selectedCubesSet.forEach((cube) => {
-            const alpha = 1 - animationProgress
-            const widthCube = 42
-            const heightCube = 46
-            const cubeImg =
-              this.cubeImages[this.map[Math.floor(cube / this.map.length)][cube % this.map.length]]
-
-            const offsetXCube = 44 + widthCube * Math.floor(cube % this.map.length)
-            const offsetYCube = 120 + heightCube * Math.floor(cube / this.map.length)
-
-            this.ctx.globalAlpha = 1
-            this.ctx.fillStyle = '#020526'
-            this.ctx.fillRect(offsetXCube, offsetYCube, widthCube, heightCube)
-            this.ctx.globalAlpha = alpha
-            this.ctx.drawImage(cubeImg, offsetXCube, offsetYCube, widthCube, heightCube)
-          })
-        }
-      )
-      this.ctx.globalAlpha = 1
-
-      // delete selected cubes
-      selectedCubesSet.forEach((cube) => {
-        this.map[Math.floor(cube / this.map.length)][cube % this.map.length] = null
-      })
-      this.ctx.clearRect(44, 120, 400, 440)
-      this.drawField()
-      this.renderMap()
-
-      // Falling
-      let cols = []
-
-      for (let i = 0; i < this.map.length; i++) {
-        let col = []
-        for (let j = 0; j < this.map[i].length; j++) {
-          if (this.map[j][i] !== null) {
-            col.push(this.map[j][i])
-          }
-        }
-        while (col.length < this.map.length) {
-          col.unshift(this.generateCube())
-        }
-        cols.push(col)
-      }
-
-      for (let i = 0; i < this.map.length; i++) {
-        for (let j = this.map[i].length - 1; j >= 0; j--) {
-          this.map[j][i] = cols[i][j]
-        }
-      }
-
-      this.changeState(selectedCubesSet.size)
-      this.ctx.clearRect(44, 120, 400, 440)
-      this.drawField()
-      this.renderMap()
-
-      this.endGame() // checkNear is in
     })
   }
-  checkNear() {
+  async checkNear() {
     // check the same cubes nearly
     let nearlies = []
 
@@ -283,32 +285,113 @@ export class Game {
       for (let j = 0; j < this.map[i].length; j++) {
         const cubeIndex = j + i * 9
         const colorCube = this.map[i][j]
-        const nearlyCubesSet = findTheSame(cubeIndex, colorCube)
+        const nearlyCubesSet = this.findTheSame(
+          this.getCubeByIndex.bind(this),
+          cubeIndex,
+          colorCube
+        )
 
         if (nearlyCubesSet.size >= 3) {
           nearlies.push('0')
         }
       }
     }
-
     if (nearlies.length === 0) {
-      console.log('Ходов нет!')
-      // render text
-      const text = 'Ходов нет!'
-      defineText(this.ctx, '45px', 'Marvin', '#a70916', 'middle')
-
-      this.ctx.fillText(
-        text,
-        centerText(this.ctx, 0, this.canvas.width, text),
-        this.canvas.height / 2
-      )
-
-      // here is this.mixingField()
+      await this.ifNoWays()
+      await this.shuffle()
     }
     nearlies = []
   }
-  // mixingField() {
-  // }
+
+  async ifNoWays() {
+    const text = 'Ходов нет!'
+    await animate(
+      1000,
+      (a) => a,
+      (animationProgress) => {
+        const fz = 15 + 40 * animationProgress
+        const widthText = this.ctx.measureText(text).width
+        const offsetX = this.canvas.width / 2 - widthText / 2 - 20
+        const offsetY = this.canvas.height / 2 - 40 * animationProgress - 10
+        const widthBlock = widthText + 40
+        const heightBlock = 8 + 90 * animationProgress + 20
+
+        defineText(this.ctx, `${fz}px`, 'Marvin', '#a70916', 'middle')
+
+        if (animationProgress > 0) {
+          this.ctx.clearRect(offsetX + 5, offsetY + 5, widthBlock - 10, heightBlock - 10)
+          drawRectWithRadius(this.ctx, offsetX, offsetY, widthBlock, heightBlock, 15)
+          this.ctx.fillStyle = '#020526'
+          this.ctx.strokeStyle = '#252e6d'
+          this.ctx.lineWidth = 1 + 5 * animationProgress
+          this.ctx.fill()
+          this.ctx.stroke()
+        }
+
+        this.ctx.fillStyle = '#a70916'
+        this.ctx.fillText(
+          text,
+          centerText(this.ctx, 0, this.canvas.width, text),
+          this.canvas.height / 2
+        )
+      }
+    )
+    this.ctx.clearRect(this.canvas.width / 2 - 403 / 2, this.canvas.height / 2 - 60, 343, 150)
+    this.drawMovesAndScores()
+  }
+  async shuffle() {
+    const widthCube = 42
+    const heightCube = 46
+
+    const shuffleArray = (array) => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[array[i], array[j]] = [array[j], array[i]]
+      }
+      return array
+    }
+
+    function easeInOutCubic(x) {
+      return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2
+    }
+    const shuffleAsync = async () => {
+      const items = shuffleArray(
+        this.map.flatMap((row, rowId) =>
+          row.map((color, colId) => ({
+            color,
+            startX: colId * widthCube,
+            startY: rowId * heightCube,
+          }))
+        )
+      ).map((item, index) => ({
+        ...item,
+        deltaX: (index % this.map.length) * widthCube - item.startX,
+        deltaY: Math.floor(index / this.map.length) * heightCube - item.startY,
+      }))
+
+      this.modalProccessed = true
+      await animate(1000, easeInOutCubic, (animationProgress) => {
+        this.ctx.clearRect(44, 120, 400, 440) // clear field
+        this.drawField()
+
+        items.forEach((item) => {
+          const image = this.cubeImages[item.color]
+          const dx = 44 + item.startX + item.deltaX * animationProgress
+          const dy = 120 + item.startY + item.deltaY * animationProgress
+          this.ctx.drawImage(image, dx, dy, widthCube, heightCube)
+        })
+
+        for (let i = 0; i < this.map.length; i++) {
+          for (let j = 0; j < this.map[i].length; j++) {
+            this.map[i][j] = items[i * this.map.length + j].color
+          }
+        }
+      })
+      this.modalProccessed = false
+    }
+    await shuffleAsync()
+    this.shuffleNum--
+  }
   drawLevelBlock() {
     const levelPic = this.imgs['level-block']
 
@@ -706,7 +789,7 @@ export class Game {
     this.scores += numberCubes
     this.drawMovesAndScores()
   }
-  endGame() {
+  async endGame() {
     if (this.scores >= this.neededScores) {
       this.modalHeading = 'Победа!'
       this.modalDesc = `Набрано: ${this.scores} + ${this.moves} очков`
@@ -720,7 +803,7 @@ export class Game {
       this.modalOpen = true
       this.drawModal()
     } else {
-      this.checkNear()
+      await this.checkNear()
     }
   }
 

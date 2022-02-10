@@ -45,25 +45,24 @@ export const centerText = (ctx, offsetX, widthBlock, text) => {
 }
 export const animate = (animationTime, frameCallback, timingFunction) =>
   new Promise((resolve) => {
-    let startTime = null;
+    let startTime = null
 
     requestAnimationFrame(async function frameHandler(currentTime) {
       if (!startTime) {
-        startTime = currentTime;
+        startTime = currentTime
       }
 
-      const timeDelta = currentTime - startTime;
-      const progress = Math.min(timeDelta / animationTime, 1);
-      const animationProgress = timingFunction(progress);
+      const timeDelta = currentTime - startTime
+      const progress = Math.min(timeDelta / animationTime, 1)
+      const animationProgress = timingFunction(progress)
 
-      await frameCallback(animationProgress);
+      await frameCallback(animationProgress)
 
-      if (progress === 1) return resolve();
+      if (progress === 1) return resolve()
 
-      requestAnimationFrame(frameHandler);
-    });
-  });
-
+      requestAnimationFrame(frameHandler)
+    })
+  })
 
 export const getMousePos = (canvas, e) => {
   const rect = canvas.getBoundingClientRect()
