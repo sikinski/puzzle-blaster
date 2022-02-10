@@ -129,8 +129,16 @@ export class Game {
     this.ctx.stroke()
   }
 
+  getCoordsByIndex(index) {
+    return [[Math.floor(index / this.map.length)], [index % this.map.length]]
+  }
   getCubeByIndex(index) {
-    return this.map[Math.floor(index / this.map.length)][index % this.map.length]
+    const [x, y] = this.getCoordsByIndex(index)
+    return this.map[x][y]
+  }
+  setCubeByIndex(index, color) {
+    const [x, y] = this.getCoordsByIndex(index)
+    this.map[x][y] = color
   }
   generateCube() {
     const colors = Object.keys(this.colors)
@@ -298,7 +306,7 @@ export class Game {
     }
     if (nearlies.length === 0) {
       await this.ifNoWays()
-      if(this.shufflesNum > 0) {
+      if (this.shufflesNum > 0) {
         await this.shuffle()
       } else {
         this.endGame(this.shufflesNum)
@@ -344,7 +352,7 @@ export class Game {
     this.drawMovesAndScores()
   }
   async shuffle() {
-    const widthCube = 42 
+    const widthCube = 42
     const heightCube = 46
 
     const shuffleArray = (array) => {
@@ -385,11 +393,7 @@ export class Game {
           this.ctx.drawImage(image, dx, dy, widthCube, heightCube)
         })
 
-        for (let i = 0; i < this.map.length; i++) {
-          for (let j = 0; j < this.map[i].length; j++) {
-            this.map[i][j] = items[i * this.map.length + j].color
-          }
-        }
+        items.forEach(({ color }, index) => this.setCubeByIndex(index, { color }))
       })
       this.modalProccessed = false
     }
@@ -800,14 +804,13 @@ export class Game {
       this.modalBtnText = 'Дальше'
       this.modalOpen = true
       this.drawModal()
-    } else if (this.moves <= 0 && this.scores < this.neededScores || shufflesNum <= 0) {
+    } else if ((this.moves <= 0 && this.scores < this.neededScores) || shufflesNum <= 0) {
       this.modalHeading = 'Поражение'
       this.modalDesc = `Не хватило ${this.neededScores - this.scores} очков`
       this.modalBtnText = 'Заново'
       this.modalOpen = true
       this.drawModal()
-    }
-    else {
+    } else {
       await this.checkNear()
     }
   }
