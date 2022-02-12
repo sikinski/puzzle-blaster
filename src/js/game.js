@@ -34,6 +34,7 @@ export class Game {
     this.modalActive = false
     this.noWaysModalActive = false
     this.boosterActive = false
+    this.activeCard = null
 
     this.colors = {
       red: 'red',
@@ -128,6 +129,22 @@ export class Game {
       this.imgs[name] = await loadImage(path)
     }
   }
+  addListeners() {
+    this.canvas.addEventListener('click', this.clickHandler)
+  }
+
+  clickHandler = async (event) => {
+    const pos = getMousePos(this.canvas, event)
+
+    const area = Object.values(this.areas).find(
+      ({ coords }) =>
+        coords.x1 <= pos.x && coords.x2 >= pos.x && coords.y1 <= pos.y && coords.y2 >= pos.y
+    )
+    if (!area) return
+
+    await area.handler(pos, event)
+  }
+
   drawField() {
     drawRectWithRadius(this.ctx, 32, 107, 400, 440, 20)
     this.ctx.lineWidth = 7
@@ -148,13 +165,14 @@ export class Game {
           let cube = this.cubeImages[this.map[i][j]]
           this.ctx.drawImage(cube, offsetXField, offsetYField, widthCube, heightCube)
         }
-
-        this.coords.push({
-          x1: offsetXField,
-          y1: offsetYField,
-          x2: offsetXField + widthCube,
-          y2: offsetYField + heightCube,
-        })
+        if (this.coords.length < this.map.length * this.map.length) {
+          this.coords.push({
+            x1: offsetXField,
+            y1: offsetYField,
+            x2: offsetXField + widthCube,
+            y2: offsetYField + heightCube,
+          })
+        }
         offsetXField += widthCube
       }
       offsetXField = 44
@@ -200,22 +218,6 @@ export class Game {
       await this.endGame()
       inProccessed = false
     }
-  }
-  clickHandler = async (event) => {
-    const pos = getMousePos(this.canvas, event)
-
-    // определяем зону клика
-    const area = Object.values(this.areas).find(
-      ({ coords }) =>
-        coords.x1 <= pos.x && coords.x2 >= pos.x && coords.y1 <= pos.y && coords.y2 >= pos.y
-    )
-    // если зоны нет - валим
-    if (!area) return
-
-    await area.handler(pos, event)
-  }
-  addListeners() {
-    this.canvas.addEventListener('click', this.clickHandler)
   }
 
   getCubeAxis(index) {
@@ -284,6 +286,8 @@ export class Game {
   async fallingCubes() {
     // Falling
     let cols = []
+    let widthCube = 44
+    let heightCube = 46
 
     for (let i = 0; i < this.map.length; i++) {
       let col = []
@@ -303,6 +307,31 @@ export class Game {
         this.map[j][i] = cols[i][j]
       }
     }
+    // const items =
+    //   cols.flatMap((row, rowId) =>
+    //     row.map((color, colId) => ({
+    //       color,
+    //       startX: colId * widthCube,
+    //       startY: rowId * heightCube,
+    //     }))
+    //   )
+    // .map((item, index) => ({
+    //   ...item,
+    //   deltaX: (index % this.map.length) * widthCube - item.startX,
+    //   deltaY: Ma th.floor(index / this.map.length) * heightCube - item.startY,
+    // }))
+
+    // await animate(1000, (a) => a, (animationProgress) => {
+    //   this.ctx.clearRect(44, 120, 400, 440) // clear field
+    //   this.drawField()
+
+    //   items.forEach((item) => {
+    //     const image = this.cubeImages[item.color]
+    //     const dx = 44 + item.startX + item.deltaX * animationProgress
+    //     const dy = 120 + item.startY + item.deltaY * animationProgress
+    //     this.ctx.drawImage(image, dx, dy, widthCube, heightCube)
+    // })
+    // })
   }
   async fadeOut(set) {
     // Fade out animation
@@ -818,6 +847,8 @@ export class Game {
       x2: offsetXCard + widthCard,
       y2: offsetYCard + heightCard,
       type: typeBonus,
+      widthCard: widthCard,
+      heightCard: heightCard,
     })
 
     // Drawing an inner block
@@ -844,12 +875,33 @@ export class Game {
 
     this.ctx.fillText(numMoney, centerTextX - 8, offsetYInner + 3)
   }
-  selectBonusHandler = (pos, event) => {
-    const clickedBonus = this.bonusesCoords.find(
-      ({ x1, x2, y1, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
-    )
 
+  selectBonusHandler = (pos, event) => {
+    this.boosterActive = true
+    const clickedBonus = this.bonusesCoords.find(
+      ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
+    )
     if (!clickedBonus) return
+
+    const { x1, y1, type, widthCard, heightCard } = clickedBonus
+
+    if (this.activeCard === type) {
+      this.ctx.clearRect(516, 444, 300, 104)
+      this.drawBonuses(1, '5')
+      this.drawBonuses(2, '3')
+      this.drawBonuses(3, '10')
+      this.activeCard = null
+    } else {
+      this.ctx.clearRect(516, 444, 300, 104)
+      this.drawBonuses(1, '5')
+      this.drawBonuses(2, '3')
+      this.drawBonuses(3, '10')
+      drawRectWithRadius(this.ctx, x1 + 10, y1 + 5, widthCard - 20, heightCard - 15, 15)
+      this.ctx.lineWidth = 4
+      this.ctx.strokeStyle = '#3d0355'
+      this.ctx.stroke()
+      this.activeCard = type
+    }
   }
 
   changeState(numberCubes) {
