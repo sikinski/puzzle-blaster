@@ -22,16 +22,18 @@ export class Game {
     this.progress = 0
     this.maxProgress = 307
     this.money = 30
-    this.moves = 309
+    this.moves = 30
     this.scores = 0
-    this.neededScores = 1609
+    this.neededScores = 160
     this.shufflesNum = 3
 
     this.modalHeading = 'Пауза'
     this.modalDesc = `Цель: ${this.neededScores} очков`
     this.modalBtnText = 'Продолжить'
-    this.modalOpen = false
-    this.modalProccessed = false
+
+    this.modalActive = false
+    this.noWaysModalActive = false
+    this.boosterActive = false
 
     this.colors = {
       red: 'red',
@@ -48,6 +50,7 @@ export class Game {
     const purple = this.colors.purple
 
     this.coords = []
+    this.bonusesCoords = []
 
     this.map = [
       [red, yellow, green, green, yellow, yellow, red, red, red],
@@ -77,6 +80,37 @@ export class Game {
       { name: 'moves-round', path: './assets/images/moves.png' },
       { name: 'rounded-rectangle', path: './assets/images/rounded-rectangle.png' },
     ]
+
+    this.areas = {
+      pause: {
+        coords: {
+          x1: 776,
+          y1: 5,
+          x2: 843,
+          y2: 72,
+        },
+        handler: this.pauseHandler,
+      },
+
+      bonuses: {
+        coords: {
+          x1: 416,
+          y1: 444,
+          x2: 764,
+          y2: 548,
+        },
+        handler: this.selectBonusHandler,
+      },
+      field: {
+        coords: {
+          x1: 44,
+          y1: 120,
+          x2: 444,
+          y2: 560,
+        },
+        handler: this.moveHandler,
+      },
+    }
   }
 
   //___Methods___
@@ -94,7 +128,14 @@ export class Game {
       this.imgs[name] = await loadImage(path)
     }
   }
-
+  drawField() {
+    drawRectWithRadius(this.ctx, 32, 107, 400, 440, 20)
+    this.ctx.lineWidth = 7
+    this.ctx.strokeStyle = '#252e6d'
+    this.ctx.fillStyle = '#020526'
+    this.ctx.fill()
+    this.ctx.stroke()
+  }
   renderMap() {
     const widthCube = 42
     const heightCube = 46
@@ -108,37 +149,88 @@ export class Game {
           this.ctx.drawImage(cube, offsetXField, offsetYField, widthCube, heightCube)
         }
 
-        this.coords.push([
-          offsetXField,
-          offsetXField + widthCube,
-          offsetYField,
-          offsetYField + heightCube,
-        ])
+        this.coords.push({
+          x1: offsetXField,
+          y1: offsetYField,
+          x2: offsetXField + widthCube,
+          y2: offsetYField + heightCube,
+        })
         offsetXField += widthCube
       }
       offsetXField = 44
       offsetYField += heightCube
     }
   }
-  drawField() {
-    drawRectWithRadius(this.ctx, 32, 107, 400, 440, 20)
-    this.ctx.lineWidth = 7
-    this.ctx.strokeStyle = '#252e6d'
-    this.ctx.fillStyle = '#020526'
-    this.ctx.fill()
-    this.ctx.stroke()
+
+  moveHandler = async (pos, event) => {
+    let inProccessed = false
+    if (!inProccessed && !this.modalActive && !this.noWaysModalActive && !this.boosterActive) {
+      inProccessed = true
+
+      const clickedCubeIdx = this.coords.findIndex(
+        ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
+      )
+      if (clickedCubeIdx === -1) return
+
+      const clickedColor = this.getCubeByIndex(clickedCubeIdx)
+
+      // Algorithm to find all the same cubes on click
+      const selectedCubes = this.findTheSame(
+        this.getCubeByIndex.bind(this),
+        clickedCubeIdx,
+        clickedColor
+      )
+
+      if (selectedCubes.size < 3) return
+      await this.fadeOut(selectedCubes)
+
+      // delete selected cubes
+      selectedCubes.forEach((index) => this.setCubeByIndex(index, null))
+      this.ctx.clearRect(44, 120, 400, 440)
+      this.drawField()
+      this.renderMap()
+
+      await this.fallingCubes(selectedCubes)
+
+      this.changeState(selectedCubes.size)
+
+      this.ctx.clearRect(44, 120, 400, 440)
+      this.drawField()
+      this.renderMap()
+      await this.endGame()
+      inProccessed = false
+    }
+  }
+  clickHandler = async (event) => {
+    const pos = getMousePos(this.canvas, event)
+
+    // определяем зону клика
+    const area = Object.values(this.areas).find(
+      ({ coords }) =>
+        coords.x1 <= pos.x && coords.x2 >= pos.x && coords.y1 <= pos.y && coords.y2 >= pos.y
+    )
+    // если зоны нет - валим
+    if (!area) return
+
+    await area.handler(pos, event)
+  }
+  addListeners() {
+    this.canvas.addEventListener('click', this.clickHandler)
   }
 
-  getCoordsByIndex(index) {
-    return [[Math.floor(index / this.map.length)], [index % this.map.length]]
+  getCubeAxis(index) {
+    return [Math.floor(index / this.map.length), index % this.map.length]
   }
   getCubeByIndex(index) {
-    const [x, y] = this.getCoordsByIndex(index)
+    const [x, y] = this.getCubeAxis(index)
     return this.map[x][y]
   }
   setCubeByIndex(index, color) {
-    const [x, y] = this.getCoordsByIndex(index)
+    const [x, y] = this.getCubeAxis(index)
     this.map[x][y] = color
+  }
+  getCubeIndex([x, y]) {
+    return x + y * this.map.length
   }
   generateCube() {
     const colors = Object.keys(this.colors)
@@ -189,101 +281,56 @@ export class Game {
     return selectedCubes
   }
 
-  changeCubesOnClick() {
-    this.canvas.addEventListener('click', async (e) => {
-      let isProccessed = false
-      if (!isProccessed && !this.modalProccessed) {
-        isProccessed = true
-        if (this.moves <= 0) return
+  async fallingCubes() {
+    // Falling
+    let cols = []
 
-        const pos = getMousePos(this.canvas, e)
-
-        const clickedCubeIdx = this.coords.findIndex(
-          ([x1, x2, y1, y2]) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
-        )
-
-        if (clickedCubeIdx === -1) return
-
-        const row = Math.floor(clickedCubeIdx / this.map.length)
-        const col = clickedCubeIdx % this.map.length
-        const clickedColor = this.map[row][col]
-
-        // Algorithm to find all the same cubes on click
-
-        const selectedCubesSet = this.findTheSame(
-          this.getCubeByIndex.bind(this),
-          clickedCubeIdx,
-          clickedColor
-        )
-
-        // Fade out animation
-        if (selectedCubesSet.size < 3) return
-
-        await animate(
-          250,
-          (a) => a,
-          (animationProgress) => {
-            selectedCubesSet.forEach((cube) => {
-              const alpha = 1 - animationProgress
-              const widthCube = 42
-              const heightCube = 46
-              const cubeImg =
-                this.cubeImages[
-                  this.map[Math.floor(cube / this.map.length)][cube % this.map.length]
-                ]
-
-              const offsetXCube = 44 + widthCube * Math.floor(cube % this.map.length)
-              const offsetYCube = 120 + heightCube * Math.floor(cube / this.map.length)
-
-              this.ctx.globalAlpha = 1
-              this.ctx.fillStyle = '#020526'
-              this.ctx.fillRect(offsetXCube, offsetYCube, widthCube, heightCube)
-              this.ctx.globalAlpha = alpha
-              this.ctx.drawImage(cubeImg, offsetXCube, offsetYCube, widthCube, heightCube)
-            })
-          }
-        )
-        this.ctx.globalAlpha = 1
-
-        // delete selected cubes
-        selectedCubesSet.forEach((cube) => {
-          this.map[Math.floor(cube / this.map.length)][cube % this.map.length] = null
-        })
-        this.ctx.clearRect(44, 120, 400, 440)
-        this.drawField()
-        this.renderMap()
-
-        // Falling
-        let cols = []
-
-        for (let i = 0; i < this.map.length; i++) {
-          let col = []
-          for (let j = 0; j < this.map[i].length; j++) {
-            if (this.map[j][i] !== null) {
-              col.push(this.map[j][i])
-            }
-          }
-          while (col.length < this.map.length) {
-            col.unshift(this.generateCube())
-          }
-          cols.push(col)
+    for (let i = 0; i < this.map.length; i++) {
+      let col = []
+      for (let j = 0; j < this.map[i].length; j++) {
+        if (this.map[j][i] !== null) {
+          col.push(this.map[j][i])
         }
-
-        for (let i = 0; i < this.map.length; i++) {
-          for (let j = this.map[i].length - 1; j >= 0; j--) {
-            this.map[j][i] = cols[i][j]
-          }
-        }
-
-        this.changeState(selectedCubesSet.size)
-        this.ctx.clearRect(44, 120, 400, 440)
-        this.drawField()
-        this.renderMap()
-
-        isProccessed = false
-        await this.endGame()
       }
-    })
+      while (col.length < this.map.length) {
+        col.unshift(this.generateCube())
+      }
+      cols.push(col)
+    }
+
+    for (let i = 0; i < this.map.length; i++) {
+      for (let j = this.map[i].length - 1; j >= 0; j--) {
+        this.map[j][i] = cols[i][j]
+      }
+    }
+  }
+  async fadeOut(set) {
+    // Fade out animation
+
+    await animate(
+      250,
+      (a) => a,
+      (animationProgress) => {
+        set.forEach((index) => {
+          const alpha = 1 - animationProgress
+          const widthCube = 42
+          const heightCube = 46
+          const cubeImg = this.cubeImages[this.getCubeByIndex(index)]
+
+          const [x, y] = this.getCubeAxis(index)
+
+          const offsetXCube = 44 + widthCube * y
+          const offsetYCube = 120 + heightCube * x
+
+          this.ctx.globalAlpha = 1
+          this.ctx.fillStyle = '#020526'
+          this.ctx.fillRect(offsetXCube, offsetYCube, widthCube, heightCube)
+          this.ctx.globalAlpha = alpha
+          this.ctx.drawImage(cubeImg, offsetXCube, offsetYCube, widthCube, heightCube)
+        })
+      }
+    )
+    this.ctx.globalAlpha = 1
   }
   async checkNear() {
     // check the same cubes nearly
@@ -291,7 +338,8 @@ export class Game {
 
     for (let i = 0; i < this.map.length; i++) {
       for (let j = 0; j < this.map[i].length; j++) {
-        const cubeIndex = j + i * 9
+        const cubeIndex = this.getCubeIndex([j, i])
+
         const colorCube = this.map[i][j]
         const nearlyCubesSet = this.findTheSame(
           this.getCubeByIndex.bind(this),
@@ -304,10 +352,13 @@ export class Game {
         }
       }
     }
+
     if (nearlies.length === 0) {
       await this.ifNoWays()
+
       if (this.shufflesNum > 0) {
         await this.shuffle()
+        this.shufflesNum--
       } else {
         this.endGame(this.shufflesNum)
       }
@@ -381,7 +432,7 @@ export class Game {
         deltaY: Math.floor(index / this.map.length) * heightCube - item.startY,
       }))
 
-      this.modalProccessed = true
+      this.noWaysModalActive = true
       await animate(1000, easeInOutCubic, (animationProgress) => {
         this.ctx.clearRect(44, 120, 400, 440) // clear field
         this.drawField()
@@ -392,13 +443,15 @@ export class Game {
           const dy = 120 + item.startY + item.deltaY * animationProgress
           this.ctx.drawImage(image, dx, dy, widthCube, heightCube)
         })
-
-        items.forEach(({ color }, index) => this.setCubeByIndex(index, { color }))
+        for (let i = 0; i < this.map.length; i++) {
+          for (let j = 0; j < this.map[i].length; j++) {
+            this.map[i][j] = items[i * this.map.length + j].color
+          }
+        }
       })
-      this.modalProccessed = false
+      this.noWaysModalActive = false
     }
     await shuffleAsync()
-    this.shufflesNum--
   }
   drawLevelBlock() {
     const levelPic = this.imgs['level-block']
@@ -508,17 +561,12 @@ export class Game {
 
     this.ctx.drawImage(pausePic, 776, 5, 67, 67)
   }
-  pauseBtn() {
-    this.canvas.addEventListener('click', async (e) => {
-      const pos = getMousePos(this.canvas, e)
-
-      if (pos.x > 776 && pos.x < 843 && pos.y > 5 && pos.y < 72) {
-        this.drawModal()
-      }
-    })
+  pauseHandler = (pos, event) => {
+    this.drawModal()
   }
 
   drawModal() {
+    this.modalActive = true
     const widthModal = 400
     const heightModal = 450
     const offsetXBlock = this.canvas.width / 2 - widthModal / 2
@@ -598,7 +646,7 @@ export class Game {
           this.drawMovesAndScores()
           this.drawBonuses(1, '5')
           this.drawBonuses(2, '3')
-          this.modalOpen = false
+          this.modalActive = false
         } else if (this.modalBtnText === 'Заново') {
           this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
           this.ctx.clearRect(460, 444, 256, 120)
@@ -637,7 +685,7 @@ export class Game {
           this.drawMovesAndScores()
           this.drawBonuses(1, '5')
           this.drawBonuses(2, '3')
-          this.modalOpen = false
+          this.modalActive = false
         } else if (this.modalBtnText === 'Дальше') {
           // state
           this.map = []
@@ -677,7 +725,7 @@ export class Game {
           this.drawMovesAndScores()
           this.drawBonuses(1, '5')
           this.drawBonuses(2, '3')
-          this.modalOpen = false
+          this.modalActive = false
         }
       }
     })
@@ -753,7 +801,24 @@ export class Game {
     const widthCard = 100
     const heightCard = 104
     const offsetXCard = offsetX + widthCard * numberCard
-    this.ctx.drawImage(bonusCardPic, offsetXCard, 444, widthCard, heightCard)
+    const offsetYCard = 444
+    this.ctx.drawImage(bonusCardPic, offsetXCard, offsetYCard, widthCard, heightCard)
+
+    let typeBonus = ''
+    if (numberCard === 1) {
+      typeBonus = 'bomb'
+    } else if (numberCard === 2) {
+      typeBonus = 'teleport'
+    } else if (numberCard === 3) {
+      typeBonus = 'superTail'
+    }
+    this.bonusesCoords.push({
+      x1: offsetXCard,
+      y1: offsetYCard,
+      x2: offsetXCard + widthCard,
+      y2: offsetYCard + heightCard,
+      type: typeBonus,
+    })
 
     // Drawing an inner block
     const heightInner = 26
@@ -779,6 +844,14 @@ export class Game {
 
     this.ctx.fillText(numMoney, centerTextX - 8, offsetYInner + 3)
   }
+  selectBonusHandler = (pos, event) => {
+    const clickedBonus = this.bonusesCoords.find(
+      ({ x1, x2, y1, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
+    )
+
+    if (!clickedBonus) return
+  }
+
   changeState(numberCubes) {
     // Change progress
     const floor = (number, divisor) => Math.floor(number / divisor) * divisor
@@ -802,13 +875,13 @@ export class Game {
       this.modalHeading = 'Победа!'
       this.modalDesc = `Набрано: ${this.scores} + ${this.moves} очков`
       this.modalBtnText = 'Дальше'
-      this.modalOpen = true
+      this.modalActive = true
       this.drawModal()
     } else if ((this.moves <= 0 && this.scores < this.neededScores) || shufflesNum <= 0) {
       this.modalHeading = 'Поражение'
       this.modalDesc = `Не хватило ${this.neededScores - this.scores} очков`
       this.modalBtnText = 'Заново'
-      this.modalOpen = true
+      this.modalActive = true
       this.drawModal()
     } else {
       await this.checkNear()
@@ -818,14 +891,15 @@ export class Game {
   async initRender() {
     await this.preloadCubesImgs()
     await this.preloadImgs()
+
+    this.addListeners()
+
     this.drawField()
     this.renderMap()
-    this.changeCubesOnClick()
     this.drawLevelBlock()
     this.drawProgress()
     this.drawMoneyBlock()
     this.drawPauseBtn()
-    this.pauseBtn()
     this.drawMovesAndScores()
     this.drawBonuses(1, '5')
     this.drawBonuses(2, '3')
