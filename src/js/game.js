@@ -181,6 +181,7 @@ export class Game {
   }
 
   moveHandler = async (pos, event) => {
+    console.log(this.modalActive, this.boosterActive, this.activeCard)
     let inProccessed = false
     if (!inProccessed && !this.modalActive && !this.noWaysModalActive && !this.boosterActive) {
       inProccessed = true
@@ -877,30 +878,41 @@ export class Game {
   }
 
   selectBonusHandler = (pos, event) => {
-    this.boosterActive = true
-    const clickedBonus = this.bonusesCoords.find(
-      ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
-    )
-    if (!clickedBonus) return
+    if (!this.modalActive) {
+      this.boosterActive = true
+      const clickedBonus = this.bonusesCoords.find(
+        ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
+      )
+      if (!clickedBonus) return
 
-    const { x1, y1, type, widthCard, heightCard } = clickedBonus
+      const { x1, y1, type, widthCard, heightCard } = clickedBonus
 
-    if (this.activeCard === type) {
-      this.ctx.clearRect(516, 444, 300, 104)
-      this.drawBonuses(1, '5')
-      this.drawBonuses(2, '3')
-      this.drawBonuses(3, '10')
-      this.activeCard = null
-    } else {
-      this.ctx.clearRect(516, 444, 300, 104)
-      this.drawBonuses(1, '5')
-      this.drawBonuses(2, '3')
-      this.drawBonuses(3, '10')
-      drawRectWithRadius(this.ctx, x1 + 10, y1 + 5, widthCard - 20, heightCard - 15, 15)
-      this.ctx.lineWidth = 4
-      this.ctx.strokeStyle = '#3d0355'
-      this.ctx.stroke()
-      this.activeCard = type
+      if (this.activeCard === type) {
+        this.ctx.clearRect(516, 444, 300, 104)
+        this.drawBonuses(1, '5')
+        this.drawBonuses(2, '3')
+        this.drawBonuses(3, '10')
+        this.activeCard = null
+        this.boosterActive = false
+      } else {
+        this.ctx.clearRect(516, 444, 300, 104)
+        this.drawBonuses(1, '5')
+        this.drawBonuses(2, '3')
+        this.drawBonuses(3, '10')
+        drawRectWithRadius(this.ctx, x1 + 10, y1 + 5, widthCard - 20, heightCard - 15, 15)
+        this.ctx.lineWidth = 4
+        this.ctx.strokeStyle = '#3d0355'
+        this.ctx.stroke()
+        this.activeCard = type
+      }
+      console.log(pos)
+
+      const clickedCubeIdx = this.coords.findIndex(
+        ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
+      )
+      if (clickedCubeIdx === -1) return
+
+      this.boosterActive = false
     }
   }
 
