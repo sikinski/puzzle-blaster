@@ -43,6 +43,8 @@ export const defineText = (ctx, fz, font, color, baseline) => {
 export const centerText = (ctx, offsetX, widthBlock, text) => {
   return offsetX + widthBlock / 2 - ctx.measureText(text).width / 2
 }
+
+// animation
 export const animate = (animationTime, frameCallback, timingFunction) =>
   new Promise((resolve) => {
     let startTime = null
@@ -63,7 +65,8 @@ export const animate = (animationTime, frameCallback, timingFunction) =>
       requestAnimationFrame(frameHandler)
     })
   })
-
+  
+// others
 export const getMousePos = (canvas, e) => {
   const rect = canvas.getBoundingClientRect()
   return {

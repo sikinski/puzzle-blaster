@@ -20,21 +20,17 @@ export class Game {
   init() {
     this.level = 1
     this.progress = 0
-    this.maxProgress = 307
     this.money = 30
-    this.moves = 300
+    this.moves = 30
     this.scores = 0
-    this.neededScores = 16000
+    this.neededScores = 160
     this.shufflesNum = 3
 
-    this.modalHeading = 'Пауза'
-    this.modalDesc = `Цель: ${this.neededScores} очков`
-    this.modalBtnText = 'Продолжить'
-
+    // modals
     this.modalActive = false
-    this.noWaysModalActive = false
+    this.selfDestructModal = false
     this.boosterActive = false
-    this.activeCard = null
+    this.activeBooster = null
 
     this.colors = {
       red: 'red',
@@ -183,7 +179,7 @@ export class Game {
 
   moveHandler = async (pos, event) => {
     let inProccessed = false
-    if (!inProccessed && !this.modalActive && !this.noWaysModalActive && !this.boosterActive) {
+    if (!inProccessed && !this.modalActive && !this.selfDestructModal && !this.boosterActive) {
       inProccessed = true
 
       const clickedCubeIdx = this.coords.findIndex(
@@ -215,8 +211,8 @@ export class Game {
 
     // booster
 
-    if (this.boosterActive && !inProccessed && !this.modalActive && !this.noWaysModalActive) {
-      if (this.activeCard === 'bomb') {
+    if (this.boosterActive && !inProccessed && !this.modalActive && !this.selfDestructModal) {
+      if (this.activeBooster === 'bomb') {
         const clickedCubeIdx = this.coords.findIndex(
           ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
         )
@@ -275,7 +271,7 @@ export class Game {
         document.body.style.cursor = 'default'
 
         this.fallingCubes()
-        this.activeCard = null
+        this.activeBooster = null
         this.boosterActive = false
         this.ctx.clearRect(516, 444, 100, 104)
         this.drawBonuses(1, '5')
@@ -560,7 +556,7 @@ export class Game {
         deltaY: Math.floor(index / this.map.length) * heightCube - item.startY,
       }))
 
-      this.noWaysModalActive = true
+      this.selfDestructModal = true
       await animate(1000, easeInOutCubic, (animationProgress) => {
         this.ctx.clearRect(44, 120, 400, 440) // clear field
         this.drawField()
@@ -577,7 +573,7 @@ export class Game {
           }
         }
       })
-      this.noWaysModalActive = false
+      this.selfDestructModal = false
     }
     await shuffleAsync()
   }
@@ -611,6 +607,8 @@ export class Game {
   }
 
   drawProgress() {
+    const maxProgress = 307
+
     const progressHeading = 'Прогресс'
 
     // block
@@ -630,13 +628,13 @@ export class Game {
     )
 
     // bg progress line
-    drawRectWithRadius(this.ctx, 235, 27, this.maxProgress, 24, 15)
+    drawRectWithRadius(this.ctx, 235, 27, maxProgress, 24, 15)
     this.ctx.fillStyle = '#011a3b'
     this.ctx.fill()
     this.ctx.closePath()
 
     // actual progress line
-    if (this.progress < this.maxProgress) {
+    if (this.progress < maxProgress) {
       drawRectWithRadius(this.ctx, 235, 27, this.progress, 24, 15)
       if (this.progress > 30) {
         this.ctx.fillStyle = '#7ae400'
@@ -644,7 +642,7 @@ export class Game {
       }
       this.ctx.closePath()
     } else {
-      drawRectWithRadius(this.ctx, 235, 27, this.maxProgress, 24, 15)
+      drawRectWithRadius(this.ctx, 235, 27, maxProgress, 24, 15)
       this.ctx.fillStyle = '#7ae400'
       this.ctx.fill()
       this.ctx.closePath()
@@ -690,10 +688,12 @@ export class Game {
     this.ctx.drawImage(pausePic, 776, 5, 67, 67)
   }
   pauseHandler = (pos, event) => {
-    this.drawModal()
+    if(!this.boosterActive) {
+      this.drawModal('Пауза', `Цель: ${this.neededScores} очков`, 'Продолжить')
+    }
   }
 
-  drawModal() {
+  drawModal(heading, desc, btnText) {
     this.modalActive = true
     const widthModal = 400
     const heightModal = 450
@@ -709,16 +709,16 @@ export class Game {
     this.ctx.closePath()
 
     // heading
-    if (this.modalHeading === 'Пауза') {
+    if (heading === 'Пауза') {
       defineText(this.ctx, '44px', 'Marvin', '#00539e', 'middle')
-    } else if (this.modalHeading === 'Победа!') {
+    } else if (heading === 'Победа!') {
       defineText(this.ctx, '44px', 'Marvin', '#7ae400', 'middle')
-    } else if (this.modalHeading === 'Поражение') {
+    } else if (heading === 'Поражение') {
       defineText(this.ctx, '44px', 'Marvin', '#a70916', 'middle')
     }
     this.ctx.fillText(
-      this.modalHeading,
-      centerText(this.ctx, offsetXBlock, widthModal, this.modalHeading),
+      heading,
+      centerText(this.ctx, offsetXBlock, widthModal, heading),
       offsetYBlock + 50
     )
 
@@ -733,8 +733,8 @@ export class Game {
     // scores
     defineText(this.ctx, '24px', 'Marvin', '#a903b6', 'middle')
     this.ctx.fillText(
-      this.modalDesc,
-      centerText(this.ctx, offsetXBlock, widthModal, this.modalDesc),
+      desc,
+      centerText(this.ctx, offsetXBlock, widthModal, desc),
       offsetYBlock + 200
     )
 
@@ -751,8 +751,8 @@ export class Game {
 
     defineText(this.ctx, '24px', 'Marvin', 'white', 'middle')
     this.ctx.fillText(
-      this.modalBtnText,
-      centerText(this.ctx, offsetXButton, widthButton, this.modalBtnText),
+      btnText,
+      centerText(this.ctx, offsetXButton, widthButton, btnText),
       offsetYButton + heightButton / 2
     )
 
@@ -765,7 +765,7 @@ export class Game {
         pos.y > offsetYButton &&
         pos.y < offsetYButton + heightButton
       ) {
-        if (this.modalBtnText === 'Продолжить') {
+        if (btnText === 'Продолжить') {
           this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
           this.ctx.clearRect(460, 444, 256, 120)
 
@@ -775,7 +775,7 @@ export class Game {
           this.drawBonuses(1, '5')
           this.drawBonuses(2, '3')
           this.modalActive = false
-        } else if (this.modalBtnText === 'Заново') {
+        } else if (btnText === 'Заново') {
           this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
           this.ctx.clearRect(460, 444, 256, 120)
           // state
@@ -801,9 +801,9 @@ export class Game {
           this.progress = 0
           this.money -= 5
 
-          this.modalHeading = 'Пауза'
-          this.modalDesc = `Цель: ${this.neededScores} очков`
-          this.modalBtnText = 'Продолжить'
+          heading = 'Пауза'
+          desc = `Цель: ${this.neededScores} очков`
+          btnText = 'Продолжить'
 
           // 'closing' modal
           this.drawProgress()
@@ -814,7 +814,7 @@ export class Game {
           this.drawBonuses(1, '5')
           this.drawBonuses(2, '3')
           this.modalActive = false
-        } else if (this.modalBtnText === 'Дальше') {
+        } else if (btnText === 'Дальше') {
           // state
           this.map = []
           while (this.map.length < 9) {
@@ -837,9 +837,9 @@ export class Game {
           this.moves = 35
           this.scores = 0
           this.progress = 0
-          this.modalHeading = 'Пауза'
+          heading = 'Пауза'
           this.modalDesc = `Цель: ${this.neededScores} очков`
-          this.modalBtnText = 'Продолжить'
+          btnText = 'Продолжить'
 
           // 'closing' modal
           this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
@@ -986,16 +986,16 @@ export class Game {
 
       const { x1, y1, type, widthCard, heightCard } = clickedBonus
       const changeCursor = () => {
-        if ((this.activeCard = 'bomb')) {
+        if ((this.activeBooster = 'bomb')) {
           document.body.style.cursor = 'url(./assets/images/bomb.png) 10 20, auto'
         }
       }
-      if (this.activeCard === type) {
+      if (this.activeBooster === type) {
         this.ctx.clearRect(516, 444, 300, 104)
         this.drawBonuses(1, '5')
         this.drawBonuses(2, '3')
         this.drawBonuses(3, '10')
-        this.activeCard = null
+        this.activeBooster = null
         this.boosterActive = false
         document.body.style.cursor = 'default'
       } else {
@@ -1007,7 +1007,7 @@ export class Game {
         this.ctx.lineWidth = 4
         this.ctx.strokeStyle = '#3d0355'
         this.ctx.stroke()
-        this.activeCard = type
+        this.activeBooster = type
         changeCursor()
       }
       // this.boosterActive = false
@@ -1015,14 +1015,16 @@ export class Game {
   }
 
   changeState(numberCubes) {
+    const maxProgress = 307
+
     // Change progress
     const floor = (number, divisor) => Math.floor(number / divisor) * divisor
     const round = (number, divisor) =>
       floor(number, divisor) + Math.round((number % divisor) / divisor) * divisor
 
-    this.progress = round((this.maxProgress * this.scores) / this.neededScores, 30)
+    this.progress = round((maxProgress * this.scores) / this.neededScores, 30)
     if (this.scores >= this.neededScores) {
-      this.progress = this.maxProgress
+      this.progress = maxProgress
     }
 
     this.drawProgress()
@@ -1038,13 +1040,17 @@ export class Game {
       this.modalDesc = `Набрано: ${this.scores} + ${this.moves} очков`
       this.modalBtnText = 'Дальше'
       this.modalActive = true
-      this.drawModal()
+      if(!this.boosterActive) {
+        this.drawModal(this.modalHeading, this.modalDesc, this.modalBtnText)
+      }
     } else if ((this.moves <= 0 && this.scores < this.neededScores) || shufflesNum <= 0) {
       this.modalHeading = 'Поражение'
       this.modalDesc = `Не хватило ${this.neededScores - this.scores} очков`
       this.modalBtnText = 'Заново'
       this.modalActive = true
-      this.drawModal()
+      if(!this.boosterActive){
+        this.drawModal(this.modalHeading, this.modalDesc, this.modalBtnText)
+      }
     } else {
       await this.checkNear()
     }
