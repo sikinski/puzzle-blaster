@@ -80,6 +80,7 @@ export class Game {
       { name: 'pause-btn', path: './assets/images/pause.png' },
       { name: 'moves-round', path: './assets/images/moves.png' },
       { name: 'rounded-rectangle', path: './assets/images/rounded-rectangle.png' },
+      { name: 'venus', path: './assets/images/venus.png' },
     ]
 
     this.areas = {
@@ -352,54 +353,86 @@ export class Game {
 
   async fallingCubes() {
     // Falling
-    let cols = []
-    let widthCube = 44
+    let widthCube = 42
     let heightCube = 46
 
-    for (let i = 0; i < this.map.length; i++) {
-      let col = []
-      for (let j = 0; j < this.map[i].length; j++) {
-        if (this.map[j][i] !== null) {
-          col.push(this.map[j][i])
-        }
+    const cols = []
+    for (let colId = 0; colId < this.map[0].length; colId++) {
+      const col = []
+      const x = this.areas.field.coords.x1 + colId * widthCube
+
+      for (let rowId = 0; rowId < this.map.length; rowId++) {
+        const color = this.map[rowId][colId]
+
+        if (color === null) continue
+
+        col.push({
+          color,
+          x,
+          startY: this.areas.field.coords.y1 + rowId * heightCube,
+        })
       }
+
+      const cubesLeft = this.map.length - col.length
       while (col.length < this.map.length) {
-        col.unshift(this.generateCube())
+        col.unshift({
+          color: this.generateCube(),
+          x,
+          startY:
+            this.areas.field.coords.y1 + (cubesLeft - col.length + this.map.length) * heightCube,
+        })
       }
+
+      for (let rowId = 0; rowId < this.map.length; rowId++) {
+        col[rowId].finishY = this.areas.field.coords.y1 + rowId * heightCube
+      }
+
       cols.push(col)
     }
 
-    for (let i = 0; i < this.map.length; i++) {
-      for (let j = this.map[i].length - 1; j >= 0; j--) {
-        this.map[j][i] = cols[i][j]
+    const gameFieldArea = new Path2D()
+    gameFieldArea.rect(
+      this.areas.field.coords.x1,
+      this.areas.field.coords.y1,
+      this.areas.field.coords.x2,
+      this.areas.field.coords.y2
+    )
+    this.ctx.save()
+    this.ctx.clip(gameFieldArea)
+
+    console.log(cols)
+    await animate(
+      500,
+      (animationProgress) => {
+        this.drawField()
+        for (let colId = 0; colId < this.map[0].length; colId++) {
+          for (let rowId = 0; rowId < this.map.length; rowId++) {
+            const cube = cols[colId][rowId]
+            const cubeImg = this.cubeImages[cube.color]
+            this.ctx.drawImage(
+              cubeImg,
+              cube.x,
+              cube.startY + (cube.finishY - cube.startY) * animationProgress,
+              widthCube,
+              heightCube
+            )
+          }
+        }
+      },
+      (x) => (x < 0.5 ? 8 * x ** 4 : 1 - (-2 * x + 2) ** 4 / 2)
+    )
+
+    this.ctx.restore()
+
+    for (let colId = 0; colId < this.map[0].length; colId++) {
+      for (let rowId = 0; rowId < this.map.length; rowId++) {
+        this.map[rowId][colId] = cols[colId][rowId].color
       }
     }
-    // const items =
-    //   cols.flatMap((row, rowId) =>
-    //     row.map((color, colId) => ({
-    //       color,
-    //       startX: colId * widthCube,
-    //       startY: rowId * heightCube,
-    //     }))
-    //   )
-    // .map((item, index) => ({
-    //   ...item,
-    //   deltaX: (index % this.map.length) * widthCube - item.startX,
-    //   deltaY: Ma th.floor(index / this.map.length) * heightCube - item.startY,
-    // }))
 
-    // await animate(1000, (a) => a, (animationProgress) => {
-    //   this.ctx.clearRect(44, 120, 400, 440) // clear field
-    //   this.drawField()
-
-    //   items.forEach((item) => {
-    //     const image = this.cubeImages[item.color]
-    //     const dx = 44 + item.startX + item.deltaX * animationProgress
-    //     const dy = 120 + item.startY + item.deltaY * animationProgress
-    //     this.ctx.drawImage(image, dx, dy, widthCube, heightCube)
-    // })
-    // })
+    this.renderMap()
   }
+
   async fadeOut(set) {
     // Fade out animation
 
@@ -951,12 +984,13 @@ export class Game {
         ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
       )
       if (!clickedBonus) return
-      function changeCursor(){
-        // document.body.style.cursor = 'pointer';
-        document.body.style.cursor = 'url(./assets/images/bomb.png) 10 20, auto'
-      }
-      const { x1, y1, type, widthCard, heightCard } = clickedBonus
 
+      const { x1, y1, type, widthCard, heightCard } = clickedBonus
+      const changeCursor = () => {
+        if ((this.activeCard = 'bomb')) {
+          document.body.style.cursor = 'url(./assets/images/bomb.png) 10 20, auto'
+        }
+      }
       if (this.activeCard === type) {
         this.ctx.clearRect(516, 444, 300, 104)
         this.drawBonuses(1, '5')
@@ -965,7 +999,6 @@ export class Game {
         this.activeCard = null
         this.boosterActive = false
         document.body.style.cursor = 'default'
-
       } else {
         this.ctx.clearRect(516, 444, 300, 104)
         this.drawBonuses(1, '5')
@@ -977,9 +1010,7 @@ export class Game {
         this.ctx.stroke()
         this.activeCard = type
         changeCursor()
-        
       }
-
       // this.boosterActive = false
     }
   }
