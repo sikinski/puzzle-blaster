@@ -181,7 +181,6 @@ export class Game {
   }
 
   moveHandler = async (pos, event) => {
-    console.log(this.modalActive, this.boosterActive, this.activeCard)
     let inProccessed = false
     if (!inProccessed && !this.modalActive && !this.noWaysModalActive && !this.boosterActive) {
       inProccessed = true
@@ -210,15 +209,80 @@ export class Game {
       this.renderMap()
 
       await this.fallingCubes(selectedCubes)
-
       this.changeState(selectedCubes.size)
-
-      this.ctx.clearRect(44, 120, 400, 440)
-      this.drawField()
-      this.renderMap()
-      await this.endGame()
-      inProccessed = false
     }
+
+    // booster
+
+    if (this.boosterActive && !inProccessed && !this.modalActive && !this.noWaysModalActive) {
+      if (this.activeCard === 'bomb') {
+        const clickedCubeIdx = this.coords.findIndex(
+          ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
+        )
+        if (clickedCubeIdx === -1) return
+        const current = clickedCubeIdx
+
+        const leftCube = current - 1
+        const rightCube = current + 1
+        const topCube = current - 9
+        const bottomCube = current + 9
+        let boomAreaIdxs = []
+
+        // left
+        if (leftCube && (leftCube + 1) % 9 && leftCube >= 0) {
+          boomAreaIdxs.push(leftCube)
+          if (leftCube + 9 < 81 && !(leftCube + (9 % 8) === 0)) {
+            boomAreaIdxs.push(leftCube + 9)
+          }
+          if (leftCube - 9 >= 0) {
+            boomAreaIdxs.push(leftCube - 9)
+          }
+        }
+
+        // top
+        if (topCube && topCube > 0) {
+          boomAreaIdxs.push(topCube)
+        }
+
+        // right
+        if (rightCube && !(rightCube % 9 === 0) && rightCube < 81) {
+          boomAreaIdxs.push(rightCube)
+          if (rightCube + 9 <= 81) {
+            boomAreaIdxs.push(rightCube + 9)
+          }
+          if (rightCube - 9 > 0) {
+            boomAreaIdxs.push(rightCube - 9)
+          }
+        }
+
+        // bottom
+        if (bottomCube && bottomCube <= 81) {
+          boomAreaIdxs.push(bottomCube)
+        }
+
+        // current
+        boomAreaIdxs.push(current)
+
+        //
+        this.changeState(boomAreaIdxs.length)
+        await this.fadeOut(boomAreaIdxs)
+
+        for (let i = 0; i < boomAreaIdxs.length; i++) {
+          this.setCubeByIndex(boomAreaIdxs[i], null)
+        }
+
+        this.fallingCubes()
+        this.activeCard = null
+        this.boosterActive = false
+        this.ctx.clearRect(516, 444, 100, 104)
+        this.drawBonuses(1, '5')
+      }
+    }
+    this.ctx.clearRect(44, 120, 400, 440)
+    this.drawField()
+    this.renderMap()
+    await this.endGame()
+    inProccessed = false
   }
 
   getCubeAxis(index) {
@@ -757,6 +821,7 @@ export class Game {
           this.drawBonuses(2, '3')
           this.modalActive = false
         }
+        this.modalActive = false
       }
     })
   }
@@ -905,14 +970,8 @@ export class Game {
         this.ctx.stroke()
         this.activeCard = type
       }
-      console.log(pos)
 
-      const clickedCubeIdx = this.coords.findIndex(
-        ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
-      )
-      if (clickedCubeIdx === -1) return
-
-      this.boosterActive = false
+      // this.boosterActive = false
     }
   }
 
