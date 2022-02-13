@@ -22,9 +22,9 @@ export class Game {
     this.progress = 0
     this.maxProgress = 307
     this.money = 30
-    this.moves = 30
+    this.moves = 300
     this.scores = 0
-    this.neededScores = 160
+    this.neededScores = 16000
     this.shufflesNum = 3
 
     this.modalHeading = 'Пауза'
@@ -379,7 +379,7 @@ export class Game {
           color: this.generateCube(),
           x,
           startY:
-            this.areas.field.coords.y1 + (cubesLeft - col.length + this.map.length) * heightCube,
+            this.areas.field.coords.y1 - (cubesLeft - col.length + this.map.length) * heightCube,
         })
       }
 
@@ -400,9 +400,8 @@ export class Game {
     this.ctx.save()
     this.ctx.clip(gameFieldArea)
 
-    console.log(cols)
     await animate(
-      500,
+      300,
       (animationProgress) => {
         this.drawField()
         for (let colId = 0; colId < this.map[0].length; colId++) {
