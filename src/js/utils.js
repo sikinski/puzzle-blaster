@@ -24,6 +24,17 @@ export const drawHalfRectWithRadius = (ctx, x, y, width, height, r) => {
   ctx.closePath()
 }
 
+export const roundedLine = (ctx, lineW, x1, y1, x2, y2, color) => {
+  ctx.beginPath();
+  ctx.lineWidth = lineW
+  ctx.lineCap = 'round'
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y1);
+  ctx.strokeStyle = color
+  ctx.stroke(); 
+  ctx.closePath()
+}
+
 // loading
 export const loadImage = (src) =>
   new Promise((resolve, reject) => {

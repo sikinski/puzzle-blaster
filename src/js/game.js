@@ -1,6 +1,7 @@
 import {
   drawRectWithRadius,
   drawHalfRectWithRadius,
+  roundedLine,
   loadImage,
   defineText,
   centerText,
@@ -76,7 +77,6 @@ export class Game {
       { name: 'pause-btn', path: './assets/images/pause.png' },
       { name: 'moves-round', path: './assets/images/moves.png' },
       { name: 'rounded-rectangle', path: './assets/images/rounded-rectangle.png' },
-      { name: 'venus', path: './assets/images/venus.png' },
     ]
 
     this.areas = {
@@ -607,14 +607,15 @@ export class Game {
   }
 
   drawProgress() {
-    const maxProgress = 307
+    const maxProgress = 292
 
     const progressHeading = 'Прогресс'
 
     // block
     const offsetXBlock = 227
     const widthBlock = 327
-    drawHalfRectWithRadius(this.ctx, offsetXBlock, 0, widthBlock, 62, 20)
+    const heightBlock = 62
+    drawHalfRectWithRadius(this.ctx, offsetXBlock, 0, widthBlock, heightBlock, 20)
     this.ctx.fillStyle = '#0c2e5c'
     this.ctx.fill()
     this.ctx.closePath()
@@ -627,25 +628,14 @@ export class Game {
       5
     )
 
-    // bg progress line
-    drawRectWithRadius(this.ctx, 235, 27, maxProgress, 24, 15)
-    this.ctx.fillStyle = '#011a3b'
-    this.ctx.fill()
-    this.ctx.closePath()
+    // bg progress line      
+      roundedLine (this.ctx, 25, 244, 42, 536, 42, '#011a3b')
 
     // actual progress line
-    if (this.progress < maxProgress) {
-      drawRectWithRadius(this.ctx, 235, 27, this.progress, 24, 15)
-      if (this.progress > 30) {
-        this.ctx.fillStyle = '#7ae400'
-        this.ctx.fill()
-      }
-      this.ctx.closePath()
-    } else {
-      drawRectWithRadius(this.ctx, 235, 27, maxProgress, 24, 15)
-      this.ctx.fillStyle = '#7ae400'
-      this.ctx.fill()
-      this.ctx.closePath()
+    if(this.progress > 3 && this.progress < maxProgress) {
+      roundedLine (this.ctx, 25, 244, 42, 244 + this.progress, 42, '#7ae400') 
+    } else if(this.progress >= maxProgress) {
+      roundedLine (this.ctx, 25, 244, 42, 244 + maxProgress, 42, '#7ae400') 
     }
   }
 
@@ -1015,14 +1005,14 @@ export class Game {
   }
 
   changeState(numberCubes) {
-    const maxProgress = 307
+    const maxProgress = 292
 
     // Change progress
     const floor = (number, divisor) => Math.floor(number / divisor) * divisor
     const round = (number, divisor) =>
       floor(number, divisor) + Math.round((number % divisor) / divisor) * divisor
 
-    this.progress = round((maxProgress * this.scores) / this.neededScores, 30)
+    this.progress = round((maxProgress * this.scores) / this.neededScores, 3)
     if (this.scores >= this.neededScores) {
       this.progress = maxProgress
     }
