@@ -271,6 +271,8 @@ export class Game {
           this.setCubeByIndex(boomAreaIdxs[i], null)
         }
 
+        document.body.style.cursor = 'default'
+
         this.fallingCubes()
         this.activeCard = null
         this.boosterActive = false
@@ -949,7 +951,10 @@ export class Game {
         ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
       )
       if (!clickedBonus) return
-
+      function changeCursor(){
+        // document.body.style.cursor = 'pointer';
+        document.body.style.cursor = 'url(./assets/images/bomb.png) 10 20, auto'
+      }
       const { x1, y1, type, widthCard, heightCard } = clickedBonus
 
       if (this.activeCard === type) {
@@ -959,6 +964,8 @@ export class Game {
         this.drawBonuses(3, '10')
         this.activeCard = null
         this.boosterActive = false
+        document.body.style.cursor = 'default'
+
       } else {
         this.ctx.clearRect(516, 444, 300, 104)
         this.drawBonuses(1, '5')
@@ -969,6 +976,8 @@ export class Game {
         this.ctx.strokeStyle = '#3d0355'
         this.ctx.stroke()
         this.activeCard = type
+        changeCursor()
+        
       }
 
       // this.boosterActive = false
