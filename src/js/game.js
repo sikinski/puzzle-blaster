@@ -78,6 +78,7 @@ export class Game {
       { name: 'pause-btn', path: './assets/images/pause.png' },
       { name: 'moves-round', path: './assets/images/moves.png' },
       { name: 'rounded-rectangle', path: './assets/images/rounded-rectangle.png' },
+      { name: 'bomb', path: './assets/images/bomb.png' },
     ]
 
     this.areas = {
@@ -273,6 +274,8 @@ export class Game {
 
         this.ctx.clearRect(516, 444, 100, 104)
         this.drawBonuses(1, '5')
+        this.money -= 5
+        this.drawMoneyBlock()
         this.activeBooster = null
         this.boosterActive = false
       }
@@ -905,6 +908,7 @@ export class Game {
     let typeBonus = ''
     if (numberCard === 1) {
       typeBonus = 'bomb'
+      this.ctx.drawImage(this.imgs['bomb'], offsetXCard + widthCard / 2 - 35 / 2, offsetYCard + 35 / 2, 35, 35)
     } else if (numberCard === 2) {
       typeBonus = 'teleport'
     } else if (numberCard === 3) {
