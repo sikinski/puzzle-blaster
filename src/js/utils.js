@@ -1,4 +1,11 @@
 // drawing
+export const drawCircle = (ctx, x, y, r, sAngle, eAngle, cloclwise, color) => {
+  ctx.beginPath()
+  ctx.arc(x, y, r, sAngle, eAngle, cloclwise)
+  ctx.fillStyle = color
+  ctx.fill()
+  ctx.closePath()
+}
 export const drawRectWithRadius = (ctx, x, y, width, height, r) => {
   ctx.beginPath()
   ctx.moveTo(x + r, y)

@@ -1,4 +1,5 @@
 import {
+  drawCircle,
   drawRectWithRadius,
   drawHalfRectWithRadius,
   roundedLine,
@@ -585,25 +586,19 @@ export class Game {
     const levelOffsetX = 99
 
     defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
+    const widthText = this.ctx.measureText(this.level).width
 
-    const widthLevelBlock = this.ctx.measureText(this.level).width + circleWidth + marginText * 2
+    const widthLevelBlock = widthText + circleWidth + marginText * 2
 
-    // block image
     this.ctx.drawImage(levelPic, levelOffsetX, 14, widthLevelBlock, 38)
 
-    // text
     this.ctx.fillText(
       this.level,
       centerText(this.ctx, levelOffsetX, widthLevelBlock, this.level) + circleWidth / 2,
       22
     )
 
-    // circle
-    this.ctx.beginPath()
-    this.ctx.arc(119, 32, 20, 0, 2 * Math.PI, false)
-    this.ctx.fillStyle = '#b5b5b5'
-    this.ctx.fill()
-    this.ctx.closePath()
+    drawCircle(this.ctx, 119, circleWidth, 20, 0, 2 * Math.PI, false, '#b5b5b5')
   }
 
   drawProgress() {
@@ -647,26 +642,21 @@ export class Game {
     const moneyOffsetX = 583
 
     defineText(this.ctx, '20px', 'Marvin', 'white', 'top')
+
     const widthText = this.ctx.measureText(this.money).width
     const widthMoneyBlock = widthText + circleWidth + marginText * 2
 
     // block image
     this.ctx.drawImage(moneyPic, moneyOffsetX, 16, widthMoneyBlock, 38)
 
-    // text
     this.ctx.fillText(
       this.money,
       centerText(this.ctx, moneyOffsetX, widthMoneyBlock, this.money) + circleWidth / 2,
       22
     )
 
-    // circle
-    this.ctx.beginPath()
-    this.ctx.arc(600, 34, 20, 0, 2 * Math.PI, false)
-    this.ctx.fillStyle = '#b5b5b5'
-    this.ctx.fill()
-    this.ctx.closePath()
-
+    drawCircle(this.ctx, 600, 34, 20, 0, 2 * Math.PI, false, '#b5b5b5')
+    
     // plus money btn
     const plusPic = this.imgs['plus-btn']
     this.ctx.drawImage(plusPic, moneyOffsetX + widthMoneyBlock + 5, 21, 30, 30)
@@ -675,7 +665,11 @@ export class Game {
   drawPauseBtn() {
     const pausePic = this.imgs['pause-btn']
 
-    this.ctx.drawImage(pausePic, 776, 5, 67, 67)
+    const offsetX = this.areas.pause.coords.x1
+    const offsetY = this.areas.pause.coords.y1
+    const widthHeightBtn = this.areas.pause.coords.x2 - this.areas.pause.coords.x1
+
+    this.ctx.drawImage(pausePic, offsetX, offsetY, widthHeightBtn, widthHeightBtn)
   }
   pauseHandler = (pos, event) => {
     if(!this.boosterActive) {
@@ -685,10 +679,23 @@ export class Game {
 
   drawModal(heading, desc, btnText) {
     this.modalActive = true
+
     const widthModal = 400
     const heightModal = 450
     const offsetXBlock = this.canvas.width / 2 - widthModal / 2
     const offsetYBlock = this.canvas.height / 2 - heightModal / 2
+
+    const closeModal = () => {
+      this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 98, heightModal + 140)
+
+      this.drawProgress()
+      this.drawField()
+      this.renderMap()
+      this.drawMovesAndScores()
+      this.drawBonuses(1, '5')
+      this.drawBonuses(2, '3')
+      this.modalActive = false
+    }
 
     drawRectWithRadius(this.ctx, offsetXBlock, offsetYBlock, widthModal, heightModal, 20)
     this.ctx.lineWidth = 7
@@ -756,18 +763,9 @@ export class Game {
         pos.y < offsetYButton + heightButton
       ) {
         if (btnText === 'Продолжить') {
-          this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
-          this.ctx.clearRect(460, 444, 256, 120)
-
-          this.drawField()
-          this.renderMap()
-          this.drawMovesAndScores()
-          this.drawBonuses(1, '5')
-          this.drawBonuses(2, '3')
-          this.modalActive = false
+          closeModal()
         } else if (btnText === 'Заново') {
-          this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
-          this.ctx.clearRect(460, 444, 256, 120)
+
           // state
           const red = this.colors.red
           const green = this.colors.green
@@ -795,17 +793,9 @@ export class Game {
           desc = `Цель: ${this.neededScores} очков`
           btnText = 'Продолжить'
 
-          // 'closing' modal
-          this.drawProgress()
-          this.drawMoneyBlock()
-          this.drawField()
-          this.renderMap()
-          this.drawMovesAndScores()
-          this.drawBonuses(1, '5')
-          this.drawBonuses(2, '3')
-          this.modalActive = false
+          closeModal()
         } else if (btnText === 'Дальше') {
-          // state
+          // generate a new game field
           this.map = []
           while (this.map.length < 9) {
             this.map.push([])
@@ -816,36 +806,25 @@ export class Game {
               this.map[i].push(this.generateCube())
             }
           }
-          if (this.neededScores * 1.2 < this.scores) {
+
+          // change state
+          if (this.neededScores * 1.05 < this.scores) {
             this.money += 5
-          } else if (this.neededScores * 1.5 < this.scores) {
+          } else if (this.neededScores * 1.1 < this.scores) {
             this.money += 10
-          } else if (this.neededScores * 3 < this.scores) {
+          } else if (this.neededScores * 1.4 < this.scores) {
             this.money += 20
           }
           this.level++
           this.moves = 35
           this.scores = 0
           this.progress = 0
+
           heading = 'Пауза'
-          this.modalDesc = `Цель: ${this.neededScores} очков`
+          desc = `Цель: ${this.neededScores} очков`
           btnText = 'Продолжить'
-
-          // 'closing' modal
-          this.ctx.clearRect(offsetXBlock - 7, offsetYBlock - 7, widthModal + 14, heightModal + 14)
-          this.ctx.clearRect(460, 444, 256, 120)
-
-          this.drawLevelBlock()
-          this.drawProgress()
-          this.drawMoneyBlock()
-          this.drawField()
-          this.renderMap()
-          this.drawMovesAndScores()
-          this.drawBonuses(1, '5')
-          this.drawBonuses(2, '3')
-          this.modalActive = false
+          closeModal()
         }
-        this.modalActive = false
       }
     })
   }
