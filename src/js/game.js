@@ -195,21 +195,21 @@ export class Game {
         clickedColor
       )
 
-      if (selectedCubes.size < 3) return
-      await this.fadeOut(selectedCubes)
+      if (selectedCubes.size >= 3) {
+        await this.fadeOut(selectedCubes)
 
-      // delete selected cubes
-      selectedCubes.forEach((index) => this.setCubeByIndex(index, null))
-      this.ctx.clearRect(44, 120, 400, 440)
-      this.drawField()
-      this.renderMap()
+        // delete selected cubes
 
-      await this.fallingCubes(selectedCubes)
-      this.changeState(selectedCubes.size)
-      this.moveActive = false
+        this.ctx.clearRect(44, 120, 400, 440)
+        this.drawField()
+        this.renderMap()
+
+        await this.fallingCubes(selectedCubes)
+        this.changeState(selectedCubes.size)
+      }
     } else {
       //bomb
-      if (this.activeBooster === 'bomb') {
+      if (this.activeBooster === 'bomb' && this.money >= 5) {
         const clickedCubeIdx = this.coords.findIndex(
           ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
         )
@@ -261,16 +261,17 @@ export class Game {
         this.changeState(boomAreaIdxs.length)
         await this.fadeOut(boomAreaIdxs)
 
-        for (let i = 0; i < boomAreaIdxs.length; i++) {
-          this.setCubeByIndex(boomAreaIdxs[i], null)
-        }
-
         document.body.style.cursor = 'default'
 
         this.ctx.clearRect(516, 444, 100, 104)
         this.drawBonuses(1, '5')
-        this.money -= 5
-        this.drawMoneyBlock()
+
+        if (this.money >= 5) {
+          this.money -= 5
+          this.ctx.clearRect(600, 10, this.areas.pause.coords.x1 - 600, 50)
+          this.drawMoneyBlock()
+        }
+
         this.activeBooster = null
         this.boosterActive = false
       }
@@ -397,20 +398,22 @@ export class Game {
     this.ctx.clip(gameFieldArea)
 
     await animate(
-      300,
+      220,
       (animationProgress) => {
         this.drawField()
         for (let colId = 0; colId < this.map[0].length; colId++) {
           for (let rowId = 0; rowId < this.map.length; rowId++) {
             const cube = cols[colId][rowId]
             const cubeImg = this.cubeImages[cube.color]
-            this.ctx.drawImage(
-              cubeImg,
-              cube.x,
-              cube.startY + (cube.finishY - cube.startY) * animationProgress,
-              widthCube,
-              heightCube
-            )
+            if (cubeImg) {
+              this.ctx.drawImage(
+                cubeImg,
+                cube.x,
+                cube.startY + (cube.finishY - cube.startY) * animationProgress,
+                widthCube,
+                heightCube
+              )
+            }
           }
         }
       },
@@ -432,8 +435,7 @@ export class Game {
     // Fade out animation
 
     await animate(
-      300,
-      (a) => a,
+      220,
       (animationProgress) => {
         set.forEach((index) => {
           const alpha = 1 - animationProgress
@@ -450,11 +452,15 @@ export class Game {
           this.ctx.fillStyle = '#020526'
           this.ctx.fillRect(offsetXCube, offsetYCube, widthCube, heightCube)
           this.ctx.globalAlpha = alpha
-          this.ctx.drawImage(cubeImg, offsetXCube, offsetYCube, widthCube, heightCube)
+          if (cubeImg) {
+            this.ctx.drawImage(cubeImg, offsetXCube, offsetYCube, widthCube, heightCube)
+          }
         })
-      }
+      },
+      (a) => a
     )
     this.ctx.globalAlpha = 1
+    set.forEach((index) => this.setCubeByIndex(index, null))
   }
   async checkNear() {
     // check the same cubes nearly
@@ -644,7 +650,7 @@ export class Game {
 
     const widthText = this.ctx.measureText(this.money).width
     const widthMoneyBlock = widthText + circleWidth + marginText * 2
-
+    console.log(widthMoneyBlock)
     // block image
     this.ctx.drawImage(moneyPic, moneyOffsetX, 16, widthMoneyBlock, 38)
 
@@ -671,9 +677,8 @@ export class Game {
     this.ctx.drawImage(pausePic, offsetX, offsetY, widthHeightBtn, widthHeightBtn)
   }
   pauseHandler = (pos, event) => {
-    if (!this.boosterActive) {
-      this.drawModal('Пауза', `Цель: ${this.neededScores} очков`, 'Продолжить')
-    }
+    if (this.boosterActive || this.modalActive || this.moveActive) return
+    this.drawModal('Пауза', `Цель: ${this.neededScores} очков`, 'Продолжить')
   }
 
   drawModal(heading, desc, btnText) {
@@ -806,11 +811,11 @@ export class Game {
           }
 
           // change state
-          if (this.neededScores * 1.05 < this.scores) {
+          if (this.neededScores * 1.02 < this.scores) {
             this.money += 5
-          } else if (this.neededScores * 1.1 < this.scores) {
+          } else if (this.neededScores * 1.05 < this.scores) {
             this.money += 10
-          } else if (this.neededScores * 1.4 < this.scores) {
+          } else if (this.neededScores * 1.2 < this.scores) {
             this.money += 20
           }
           this.level++
@@ -961,7 +966,7 @@ export class Game {
       const { x1, y1, type, widthCard, heightCard } = clickedBonus
 
       const changeCursor = () => {
-        if (this.activeBooster === 'bomb') {
+        if (this.activeBooster === 'bomb' && this.money >= 5) {
           document.body.style.cursor = 'url(./assets/images/bomb.png) 10 20, auto'
         } else {
           document.body.style.cursor = 'default'
@@ -1015,7 +1020,11 @@ export class Game {
   }
   async endGame(shufflesNum) {
     if (this.scores >= this.neededScores && !this.boosterActive) {
-      this.drawModal('Победа!', `Набрано: ${this.scores} + ${this.moves} очков`, 'Дальше')
+      if (this.moves > 0) {
+        this.drawModal('Победа!', `Набрано: ${this.scores} + ${this.moves} очков`, 'Дальше')
+      } else {
+        this.drawModal('Победа!', `Набрано: ${this.scores} очков`, 'Дальше')
+      }
     } else if (
       (this.moves <= 0 && this.scores < this.neededScores && !this.boosterActive) ||
       shufflesNum <= 0
