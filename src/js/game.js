@@ -28,7 +28,6 @@ export class Game {
     this.neededScores = 160
     this.shufflesNum = 3
 
-    // modals
     this.moveActive = false
     this.modalActive = false
     this.selfDestructModal = false
@@ -967,7 +966,7 @@ export class Game {
 
       const changeCursor = () => {
         if (this.activeBooster === 'bomb' && this.money >= 5) {
-          document.body.style.cursor = 'url(./assets/images/bomb.png) 10 20, auto'
+          document.body.style.cursor = 'url(assets/images/bomb.png) 10 20, auto'
         } else {
           document.body.style.cursor = 'default'
         }
