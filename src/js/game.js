@@ -271,18 +271,19 @@ export class Game {
 
         document.body.style.cursor = 'default'
 
-        this.fallingCubes()
-        this.activeBooster = null
-        this.boosterActive = false
         this.ctx.clearRect(516, 444, 100, 104)
         this.drawBonuses(1, '5')
+        this.activeBooster = null
+        this.boosterActive = false
       }
     }
+
     this.ctx.clearRect(44, 120, 400, 440)
     this.drawField()
     this.renderMap()
-    await this.endGame()
     inProccessed = false
+    await this.fallingCubes()
+    await this.endGame()
   }
 
   getCubeAxis(index) {
@@ -623,14 +624,14 @@ export class Game {
       5
     )
 
-    // bg progress line      
-      roundedLine (this.ctx, 25, 244, 42, 536, 42, '#011a3b')
+    // bg progress line
+    roundedLine(this.ctx, 25, 244, 42, 536, 42, '#011a3b')
 
     // actual progress line
-    if(this.progress > 3 && this.progress < maxProgress) {
-      roundedLine (this.ctx, 25, 244, 42, 244 + this.progress, 42, '#7ae400') 
-    } else if(this.progress >= maxProgress) {
-      roundedLine (this.ctx, 25, 244, 42, 244 + maxProgress, 42, '#7ae400') 
+    if (this.progress > 3 && this.progress < maxProgress) {
+      roundedLine(this.ctx, 25, 244, 42, 244 + this.progress, 42, '#7ae400')
+    } else if (this.progress >= maxProgress) {
+      roundedLine(this.ctx, 25, 244, 42, 244 + maxProgress, 42, '#7ae400')
     }
   }
 
@@ -656,7 +657,7 @@ export class Game {
     )
 
     drawCircle(this.ctx, 600, 34, 20, 0, 2 * Math.PI, false, '#b5b5b5')
-    
+
     // plus money btn
     const plusPic = this.imgs['plus-btn']
     this.ctx.drawImage(plusPic, moneyOffsetX + widthMoneyBlock + 5, 21, 30, 30)
@@ -672,7 +673,7 @@ export class Game {
     this.ctx.drawImage(pausePic, offsetX, offsetY, widthHeightBtn, widthHeightBtn)
   }
   pauseHandler = (pos, event) => {
-    if(!this.boosterActive) {
+    if (!this.boosterActive) {
       this.drawModal('Пауза', `Цель: ${this.neededScores} очков`, 'Продолжить')
     }
   }
@@ -765,7 +766,6 @@ export class Game {
         if (btnText === 'Продолжить') {
           closeModal()
         } else if (btnText === 'Заново') {
-
           // state
           const red = this.colors.red
           const green = this.colors.green
@@ -954,32 +954,35 @@ export class Game {
       if (!clickedBonus) return
 
       const { x1, y1, type, widthCard, heightCard } = clickedBonus
+
       const changeCursor = () => {
-        if ((this.activeBooster = 'bomb')) {
+        if (this.activeBooster === 'bomb') {
           document.body.style.cursor = 'url(./assets/images/bomb.png) 10 20, auto'
         }
       }
-      if (this.activeBooster === type) {
+
+      const redrawCards = () => {
         this.ctx.clearRect(516, 444, 300, 104)
         this.drawBonuses(1, '5')
         this.drawBonuses(2, '3')
         this.drawBonuses(3, '10')
+      }
+
+      if (this.activeBooster === type) {
+        redrawCards()
         this.activeBooster = null
         this.boosterActive = false
         document.body.style.cursor = 'default'
       } else {
-        this.ctx.clearRect(516, 444, 300, 104)
-        this.drawBonuses(1, '5')
-        this.drawBonuses(2, '3')
-        this.drawBonuses(3, '10')
+        redrawCards()
         drawRectWithRadius(this.ctx, x1 + 10, y1 + 5, widthCard - 20, heightCard - 15, 15)
         this.ctx.lineWidth = 4
         this.ctx.strokeStyle = '#3d0355'
         this.ctx.stroke()
+
         this.activeBooster = type
         changeCursor()
       }
-      // this.boosterActive = false
     }
   }
 
@@ -1004,22 +1007,13 @@ export class Game {
     this.drawMovesAndScores()
   }
   async endGame(shufflesNum) {
-    if (this.scores >= this.neededScores) {
-      this.modalHeading = 'Победа!'
-      this.modalDesc = `Набрано: ${this.scores} + ${this.moves} очков`
-      this.modalBtnText = 'Дальше'
-      this.modalActive = true
-      if(!this.boosterActive) {
-        this.drawModal(this.modalHeading, this.modalDesc, this.modalBtnText)
-      }
-    } else if ((this.moves <= 0 && this.scores < this.neededScores) || shufflesNum <= 0) {
-      this.modalHeading = 'Поражение'
-      this.modalDesc = `Не хватило ${this.neededScores - this.scores} очков`
-      this.modalBtnText = 'Заново'
-      this.modalActive = true
-      if(!this.boosterActive){
-        this.drawModal(this.modalHeading, this.modalDesc, this.modalBtnText)
-      }
+    if (this.scores >= this.neededScores && !this.boosterActive) {
+      this.drawModal('Победа!', `Набрано: ${this.scores} + ${this.moves} очков`, 'Дальше')
+    } else if (
+      (this.moves <= 0 && this.scores < this.neededScores && !this.boosterActive) ||
+      shufflesNum <= 0
+    ) {
+      this.drawModal('Поражение', `Не хватило ${this.neededScores - this.scores} очков`, 'Заново')
     } else {
       await this.checkNear()
     }
