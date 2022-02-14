@@ -29,6 +29,7 @@ export class Game {
     this.shufflesNum = 3
 
     // modals
+    this.moveActive = false
     this.modalActive = false
     this.selfDestructModal = false
     this.boosterActive = false
@@ -42,11 +43,7 @@ export class Game {
       purple: 'purple',
     }
 
-    const red = this.colors.red
-    const green = this.colors.green
-    const yellow = this.colors.yellow
-    const blue = this.colors.blue
-    const purple = this.colors.purple
+    const { red, green, yellow, blue, purple } = this.colors
 
     this.coords = []
     this.bonusesCoords = []
@@ -180,9 +177,9 @@ export class Game {
   }
 
   moveHandler = async (pos, event) => {
-    let inProccessed = false
-    if (!inProccessed && !this.modalActive && !this.selfDestructModal && !this.boosterActive) {
-      inProccessed = true
+    if (this.moveActive || this.modalActive || this.selfDestructModal) return
+    if (!this.boosterActive) {
+      this.moveActive = true
 
       const clickedCubeIdx = this.coords.findIndex(
         ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
@@ -209,11 +206,9 @@ export class Game {
 
       await this.fallingCubes(selectedCubes)
       this.changeState(selectedCubes.size)
-    }
-
-    // booster
-
-    if (this.boosterActive && !inProccessed && !this.modalActive && !this.selfDestructModal) {
+      this.moveActive = false
+    } else {
+      //bomb
       if (this.activeBooster === 'bomb') {
         const clickedCubeIdx = this.coords.findIndex(
           ({ x1, y1, x2, y2 }) => pos.x >= x1 && pos.x <= x2 && pos.y >= y1 && pos.y <= y2
@@ -284,9 +279,9 @@ export class Game {
     this.ctx.clearRect(44, 120, 400, 440)
     this.drawField()
     this.renderMap()
-    inProccessed = false
     await this.fallingCubes()
     await this.endGame()
+    this.moveActive = false
   }
 
   getCubeAxis(index) {
@@ -437,7 +432,7 @@ export class Game {
     // Fade out animation
 
     await animate(
-      250,
+      300,
       (a) => a,
       (animationProgress) => {
         set.forEach((index) => {
@@ -908,7 +903,13 @@ export class Game {
     let typeBonus = ''
     if (numberCard === 1) {
       typeBonus = 'bomb'
-      this.ctx.drawImage(this.imgs['bomb'], offsetXCard + widthCard / 2 - 35 / 2, offsetYCard + 35 / 2, 35, 35)
+      this.ctx.drawImage(
+        this.imgs['bomb'],
+        offsetXCard + widthCard / 2 - 35 / 2,
+        offsetYCard + 35 / 2,
+        35,
+        35
+      )
     } else if (numberCard === 2) {
       typeBonus = 'teleport'
     } else if (numberCard === 3) {
@@ -962,6 +963,8 @@ export class Game {
       const changeCursor = () => {
         if (this.activeBooster === 'bomb') {
           document.body.style.cursor = 'url(./assets/images/bomb.png) 10 20, auto'
+        } else {
+          document.body.style.cursor = 'default'
         }
       }
 
