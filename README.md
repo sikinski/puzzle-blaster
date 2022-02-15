@@ -10,6 +10,8 @@ Use the  module bundler [webpack](https://webpack.js.org/) to install the game.
 npm run start
 ```
 
+Or play the game online [here](https://sikinski.github.io/)
+
 ## Description
 This game was written as a test tack. How to play? You need to click on the area of identical cubes to destroy them. The area size cannot be less than 3. The goal of the round is to score X points in Y moves, otherwise you lose. 
 
