@@ -1,9 +1,9 @@
 {
-  "name": "webpack-boilerplate",
-  "version": "3.0.1",
-  "description": "Sensible webpack 5 boilerplate using Babel and PostCSS.",
+  "name": "puzzle-blaster",
+  "version": "1.0.0",
+  "description": "Prototype puzzle game with blast mechanics",
   "main": "index.js",
-  "author": "Tania Rascia",
+  "author": "Ulyana Fomina",
   "license": "MIT",
   "scripts": {
     "start": "cross-env NODE_ENV=development webpack serve --config config/webpack.dev.js",
@@ -12,9 +12,8 @@
     "prettify": "prettier --write 'src/**/*.js'"
   },
   "keywords": [
-    "webpack",
-    "webpack 5",
-    "webpack boilerplate"
+    "puzzle",
+    "puzzle blast"
   ],
   "devDependencies": {
     "@babel/core": "^7.15.8",
@@ -45,7 +44,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:taniarascia/webpack-boilerplate"
+    "url": "git@github.com:sikinski/puzzle-blaster"
   },
   "dependencies": {
     "@babel/polyfill": "^7.12.1"
